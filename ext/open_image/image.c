@@ -5,6 +5,10 @@
     Image *image; \
     Data_Get_Struct(self, Image, image);
 
+#define JPEG_QUALITY 90
+#define COLOR_SIZE 4 /* For possible future expandment */
+#define COLOR_COMP 4 /* Number of color components */
+
 VALUE rb_cOpenImage;
 VALUE rb_cOpenImagePointer;
 
@@ -13,10 +17,15 @@ void Init_open_image_image(VALUE module) {
 
     rb_define_alloc_func(rb_cOpenImage, open_image_alloc);
     rb_define_method(rb_cOpenImage, "initialize", open_image_initialize, -1);
+    rb_define_method(rb_cOpenImage, "dispose", open_image_dispose, 0);
+    rb_define_method(rb_cOpenImage, "disposed?", open_image_disposed_p, 0);
 
     rb_define_method(rb_cOpenImage, "width", open_image_width, 0);
     rb_define_method(rb_cOpenImage, "height", open_image_height, 0);
     rb_define_method(rb_cOpenImage, "pixels", open_image_pixels, 0);
+    rb_define_alias(rb_cOpenImage, "rows", "height");
+    rb_define_alias(rb_cOpenImage, "columns", "width");
+    rb_define_alias(rb_cOpenImage, "to_blob", "pixels");
 
     rb_define_method(rb_cOpenImage, "ptr", open_image_ptr, 0);
 
@@ -25,15 +34,26 @@ void Init_open_image_image(VALUE module) {
     rb_define_method(rb_cOpenImage, "save_bmp", open_image_save_bmp, 1);
     rb_define_method(rb_cOpenImage, "save_tga", open_image_save_tga, 1);
 
-    rb_define_alias(rb_cOpenImage, "rows", "height");
-    rb_define_alias(rb_cOpenImage, "columns", "width");
-    rb_define_alias(rb_cOpenImage, "to_blob", "pixels");
-}
+    rb_define_method(rb_cOpenImage, "get_pixel", open_image_get_pixel, -1);
+    rb_define_method(rb_cOpenImage, "set_pixel", open_image_set_pixel, -1);
+    rb_define_method(rb_cOpenImage, "fill_rect", open_image_fill_rect, -1);
+    rb_define_method(rb_cOpenImage, "subimage", open_image_subimage, -1);
+}   
 
-void open_image_free(void *data) {
+static inline void open_image_free(void *data) {
     Image *image = (Image *)data;
     xfree(image->pixels);
     xfree(image);
+    image->pixels = NULL;
+}
+
+VALUE open_image_dispose(VALUE self) {
+    open_image_free(RDATA(self)->data);
+}
+
+VALUE open_image_disposed_p(VALUE self) {
+    IMAGE();
+    return image->pixels ? Qfalse : Qtrue;
 }
 
 VALUE open_image_alloc(VALUE klass) {
@@ -58,7 +78,7 @@ VALUE open_image_initialize(int argc, VALUE *argv, VALUE self) {
             stbi_set_flip_vertically_on_load(TRUE);
 
         int n;
-        image->pixels = (unsigned char*) stbi_load(filename, &image->width, &image->height, &n, 4);
+        image->pixels = (unsigned char*) stbi_load(filename, &image->width, &image->height, &n, COLOR_COMP);
 
         if (flip)
             stbi_set_flip_vertically_on_load(FALSE);
@@ -67,7 +87,7 @@ VALUE open_image_initialize(int argc, VALUE *argv, VALUE self) {
     {
         uint w = NUM2UINT(arg1);
         uint h = NUM2UINT(arg2);
-        size_t size = w * h * 4;
+        size_t size = w * h * COLOR_SIZE;
 
         image->width = w;
         image->height = h;
@@ -81,16 +101,20 @@ VALUE open_image_initialize(int argc, VALUE *argv, VALUE self) {
             memset(image->pixels, 0, size);
         else
         {
-            Color *color;
-            Data_Get_Struct(c, Color, color);
+            Color *src;
+            Data_Get_Struct(c, Color, src);
             
-            // TODO: Implement
-
-            // size_t sz = sizeof(Color);
-            // Color *src = (Color*) image->pixels;
-            // for (int i = 0; i < size; i += sz)
-            //     memcpy(src + i, color, sz);
+            unsigned char *dst = (unsigned char*) image->pixels;
+            size_t sz = sizeof(Color);
+            for (int i = 0; i < size; i += sz)
+                memcpy(dst + i, src, sz);
         }
+    }
+
+    if (rb_block_given_p())
+    {
+        rb_yield(self);
+        open_image_free(image);
     }
 
     return Qnil;
@@ -108,7 +132,7 @@ VALUE open_image_height(VALUE self) {
 
 VALUE open_image_pixels(VALUE self) {
     IMAGE();
-    long size = (long)(image->width * image->height * 4);
+    long size = (long)(image->width * image->height * COLOR_SIZE);
     return rb_str_new(image->pixels, size);
 }
 
@@ -132,6 +156,10 @@ VALUE open_image_ptr(VALUE self) {
 
 VALUE open_image_save_png(VALUE self, VALUE path) {
     IMAGE();
+    const char *filename = StringValueCStr(path);
+    int stride = image->width * COLOR_SIZE;
+    int result = stbi_write_png(filename, image->width, image->height, COLOR_COMP, image->pixels, stride);
+    return result ? Qtrue : Qfalse;
 }
 
 VALUE open_image_save_jpg(int argc, VALUE *argv, VALUE self) {
@@ -139,19 +167,169 @@ VALUE open_image_save_jpg(int argc, VALUE *argv, VALUE self) {
     VALUE path, quality;
     rb_scan_args(argc, argv, "11", &path, &quality);
 
-    int q = NIL_P(quality) ? 90 : NUM2INT(quality);
+    int q = NIL_P(quality) ? JPEG_QUALITY : NUM2INT(quality);
     const char *filename = StringValueCStr(path);
 
-    int result = stbi_write_jpg(filename, image->width, image->height, 4, image->pixels, q);
+    int result = stbi_write_jpg(filename, image->width, image->height, COLOR_COMP, image->pixels, q);
     return result ? Qtrue : Qfalse;
 }
 
 VALUE open_image_save_tga(VALUE self, VALUE path) {
     IMAGE();
-
+    const char *filename = StringValueCStr(path);
+    int result = stbi_write_tga(filename, image->width, image->height, COLOR_COMP, image->pixels);
+    return result ? Qtrue : Qfalse;
 }
 
 VALUE open_image_save_bmp(VALUE self, VALUE path) {
     IMAGE();
-
+    const char *filename = StringValueCStr(path);
+    int result = stbi_write_bmp(filename, image->width, image->height, COLOR_COMP, image->pixels);
+    return result ? Qtrue : Qfalse;
 }
+
+VALUE open_image_get_pixel(int argc, VALUE *argv, VALUE self) {
+    IMAGE();
+    Color *color = ALLOC(Color);
+    int x, y;
+    if (argc == 1)
+    {
+        Point *point;
+        Data_Get_Struct(argv[0], Point, point);
+        x = point->x;
+        y = point->y;
+    }
+    else if (argc == 2)
+    {
+        x = NUM2INT(argv[0]);
+        y = NUM2INT(argv[1]);
+    }
+    else
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 2)", argc);
+
+    if (x < 0 || x >= image->width)
+        rb_raise(rb_eRangeError, "x coordinate outside of image bounds (given %d, expected 0...%u)", x, image->width);
+    if (y < 0 || y >= image->height)
+        rb_raise(rb_eRangeError, "y coordinate outside of image bounds (given %d, expected 0...%u)", y, image->height);
+
+    int offset = (x + (y * image->width)) * COLOR_SIZE;
+    memcpy(color, *(&image->pixels) + offset, COLOR_SIZE);
+    RETURN_WRAP_STRUCT(rb_cOpenImageColor, color);
+}
+
+VALUE open_image_set_pixel(int argc, VALUE *argv, VALUE self) {
+    IMAGE();
+    int x, y;
+    Color *color;
+    if (argc == 2)
+    {
+        Point *point;
+        Data_Get_Struct(argv[0], Point, point);
+        x = point->x;
+        y = point->y;
+        Data_Get_Struct(argv[1], Color, color);
+    }
+    else if (argc == 3)
+    {
+        x = NUM2INT(argv[0]);
+        y = NUM2INT(argv[1]);
+        Data_Get_Struct(argv[2], Color, color);
+    }
+    else
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 2, 3)", argc);
+
+    if (x < 0 || x >= image->width)
+        rb_raise(rb_eRangeError, "x coordinate outside of image bounds (given %d, expected 0...%u)", x, image->width);
+    if (y < 0 || y >= image->height)
+        rb_raise(rb_eRangeError, "y coordinate outside of image bounds (given %d, expected 0...%u)", y, image->height);
+
+    int offset = (x + (y * image->width)) * COLOR_SIZE;
+    memcpy(*(&image->pixels) + offset, color, COLOR_SIZE);
+
+    return self;
+}
+
+VALUE open_image_fill_rect(int argc, VALUE *argv, VALUE self) {
+    IMAGE();
+    int t, l, r, b;
+    Color *color;
+    if (argc == 2)
+    {
+        Rect *rect;
+        Data_Get_Struct(argv[0], Rect, rect);
+        l = MAX(rect->x, 0);
+        t = MAX(rect->y, 0);
+        r = MIN(l + NUM2INT(rect->width), image->width - 1);
+        b = MIN(t + NUM2INT(rect->height), image->height - 1);
+        Data_Get_Struct(argv[1], Color, color);
+    }
+    else if (argc == 5)
+    {
+        l = MAX(NUM2INT(argv[0]), 0);
+        t = MAX(NUM2INT(argv[1]), 0);
+        r = MIN(NUM2INT(argv[2]) + l, image->width - 1);
+        b = MIN(NUM2INT(argv[3]) + t, image->height - 1);
+        Data_Get_Struct(argv[4], Color, color);
+    }
+    else 
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 2, 5)", argc);
+
+    if (l >= r || t >= b)
+        rb_raise(rb_eOpenImageError, "invalid rectangle specified (%d, %d, %d, %d)", l, t, r- l, b - t);
+
+    int w = (r - l) * COLOR_SIZE;
+    for (int y = t; y < b; y++)
+    {
+        int offset = (l + (y * image->width)) * COLOR_SIZE;
+        for (int i = 0; i < w; i += COLOR_SIZE)
+        {
+            memcpy(*(&image->pixels) + offset + i, color, COLOR_SIZE);
+        }
+    }
+
+    return self;
+}
+
+VALUE open_image_subimage(int argc, VALUE *argv, VALUE self) {
+    IMAGE();
+    int t, l, r, b;
+    if (argc == 1)
+    {
+        Rect *rect;
+        Data_Get_Struct(argv[0], Rect, rect);
+        l = MAX(rect->x, 0);
+        t = MAX(rect->y, 0);
+        r = MIN(l + NUM2INT(rect->width), image->width - 1);
+        b = MIN(t + NUM2INT(rect->height), image->height - 1);
+    }
+    else if (argc == 4)
+    {
+        l = MAX(NUM2INT(argv[0]), 0);
+        t = MAX(NUM2INT(argv[1]), 0);
+        r = MIN(NUM2INT(argv[2]) + l, image->width - 1);
+        b = MIN(NUM2INT(argv[3]) + t, image->height - 1);
+    }
+    else 
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 4)", argc);
+
+    if (l >= r || t >= b)
+        rb_raise(rb_eOpenImageError, "invalid rectangle specified (%d, %d, %d, %d)", l, t, r- l, b - t);
+
+    unsigned char *dst = xmalloc((r - l) * (b - t) * COLOR_SIZE);
+    unsigned char *src = *(&image->pixels);
+
+    size_t w = (r - l) * COLOR_SIZE;
+    int i = 0;
+    for (int y = t; y < b; y++, i++)
+    {
+        int d = i * w;
+        int s = (l + (y * image->width)) * COLOR_SIZE; 
+        memcpy(dst + d, src + s, w);
+    }
+    Image *sub = ALLOC(Image);
+    sub->width = r - l;
+    sub->height = b - t;
+    sub->pixels = dst;
+    return Data_Wrap_Struct(CLASS_OF(self), NULL, open_image_free, sub);
+}
+

@@ -18,4 +18,9 @@ VALUE open_image_color_set_g(VALUE self, VALUE value);
 VALUE open_image_color_set_b(VALUE self, VALUE value);
 VALUE open_image_color_set_a(VALUE self, VALUE value);
 
+VALUE open_image_color_to_a(VALUE self);
+VALUE open_image_color_to_h(VALUE self);
+VALUE open_image_color_to_s(VALUE self);
+VALUE open_image_color_to_i(VALUE self);
+
 #endif /* RB_OPEN_IMAGE_COLOR_H */

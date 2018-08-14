@@ -33,6 +33,11 @@ void Init_open_image_color(VALUE module) {
     rb_define_alias(rb_cOpenImageColor, "green=", "g=");
     rb_define_alias(rb_cOpenImageColor, "blue=", "b=");
     rb_define_alias(rb_cOpenImageColor, "alpha=", "a=");
+
+    rb_define_method(rb_cOpenImageColor, "to_a", open_image_color_to_a, 0);
+    rb_define_method(rb_cOpenImageColor, "to_h", open_image_color_to_h, 0);
+    rb_define_method(rb_cOpenImageColor, "to_s", open_image_color_to_s, 0);
+    rb_define_method(rb_cOpenImageColor, "to_i", open_image_color_to_i, 0);
 }
 
 VALUE open_image_color_alloc(VALUE klass) {
@@ -108,4 +113,33 @@ VALUE open_image_color_set_a(VALUE self, VALUE value) {
     COLOR();
     color->a = (unsigned char) CLAMP(NUM2INT(value), 0, 255);
     return value;
+}
+
+VALUE open_image_color_to_a(VALUE self) {
+    COLOR();
+    VALUE ary = rb_ary_new_capa(4);
+    rb_ary_store(ary, 0, color->r);
+    rb_ary_store(ary, 1, color->g);
+    rb_ary_store(ary, 2, color->b);
+    rb_ary_store(ary, 3, color->a);
+    return ary;
+}
+
+VALUE open_image_color_to_h(VALUE self) {
+    COLOR();
+    VALUE hash = rb_hash_new();
+    rb_hash_aset(hash, STR2SYM("red"), color->r);
+    rb_hash_aset(hash, STR2SYM("green"), color->g);
+    rb_hash_aset(hash, STR2SYM("blue"), color->b);
+    rb_hash_aset(hash, STR2SYM("alpha"), color->a);
+    return hash;
+}
+
+VALUE open_image_color_to_s(VALUE self) {
+    COLOR();
+    return rb_sprintf("<Color: R:%d, G:%d, B:%d, A:%d>", color->r, color->g, color->b, color->a);
+}
+
+VALUE open_image_color_to_i(VALUE self) {
+    
 }
