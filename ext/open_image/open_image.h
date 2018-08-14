@@ -1,6 +1,7 @@
-#ifndef OPEN_IMAGE_H
-#define OPEN_IMAGE_H 1
+#ifndef RB_OPEN_IMAGE_H
+#define RB_OPEN_IMAGE_H 1
 
-#include "ruby.h"
+#include "image.h"
+#include "color.h"
 
-#endif /* OPEN_IMAGE_H */
+#endif /* RB_OPEN_IMAGE_H */
