@@ -14,4 +14,3 @@ void Init_open_image(void) {
     Init_open_image_color(rb_mOpenImage);
     Init_open_image_image(rb_mOpenImage);
 }
-

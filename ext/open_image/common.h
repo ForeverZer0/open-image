@@ -15,7 +15,6 @@
 #define MIN(v1, v2) (v1 > v2 ? v2 : v1)
 #define MAX(v1, v2) (v1 < v2 ? v2 : v1)
 
-
 #include "ruby.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -56,7 +55,6 @@ extern VALUE rb_mOpenImage;
 extern VALUE rb_eOpenImageError;
 extern VALUE rb_cOpenImage;
 extern VALUE rb_cOpenImageColor;
-extern VALUE rb_mOpenImageColors;
 extern VALUE rb_cOpenImagePoint;
 extern VALUE rb_cOpenImageSize;
 extern VALUE rb_cOpenImageRect;

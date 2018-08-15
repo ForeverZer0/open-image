@@ -26,8 +26,14 @@ VALUE open_image_set_pixel(int argc, VALUE *argv, VALUE self);
 VALUE open_image_fill_rect(int argc, VALUE *argv, VALUE self);
 VALUE open_image_subimage(int argc, VALUE *argv, VALUE self);
 
+VALUE open_image_split(VALUE self, VALUE rows, VALUE columns);
+
+VALUE open_image_size(VALUE self);
+VALUE open_image_rect(VALUE self);
+VALUE open_image_to_s(VALUE self);
+VALUE open_image_dup(VALUE self);
+
 // VALUE open_image_draw_rect(VALUE self);
 // VALUE open_image_blit(VALUE self);
-// VALIE open_image_tiles(VALUE klass);
 
 #endif /* RB_OPEN_IMAGE_IMAGE_H */

@@ -2,6 +2,7 @@
 #ifndef RB_OPEN_IMAGE_COLOR_H
 #define RB_OPEN_IMAGE_COLOR_H 1
 
+#include <string.h>
 #include "common.h"
 
 void Init_open_image_color(VALUE module);

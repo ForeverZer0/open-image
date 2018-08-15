@@ -23,6 +23,12 @@ void Init_open_image_rect(VALUE module) {
     rb_define_method(rb_cOpenImageRect, "size", open_image_rect_get_size, 0);
     rb_define_method(rb_cOpenImageRect, "location=", open_image_rect_set_location, 1);
     rb_define_method(rb_cOpenImageRect, "size=", open_image_rect_set_size, 1);
+
+    rb_define_method(rb_cOpenImageRect, "to_a", open_image_rect_to_a, 0);
+    rb_define_method(rb_cOpenImageRect, "to_h", open_image_rect_to_h, 0);
+    rb_define_method(rb_cOpenImageRect, "to_s", open_image_rect_to_s, 0);
+    rb_define_alias(rb_cOpenImageRect, "to_str", "to_s");
+    rb_define_method(rb_cOpenImageRect, "dup", open_image_rect_dup, 0);
 }
 
 VALUE open_image_rect_alloc(VALUE klass) {
@@ -151,4 +157,36 @@ VALUE open_image_rect_set_size(VALUE self, VALUE value) {
     rect->width = size->width;
     rect->height = size->height;
     return value;
+}
+
+VALUE open_image_rect_to_a(VALUE self) {
+    RECT();
+    VALUE ary = rb_ary_new_capa(4);
+    rb_ary_store(ary, 0, INT2NUM(rect->x));
+    rb_ary_store(ary, 1, INT2NUM(rect->y));
+    rb_ary_store(ary, 2, INT2NUM(rect->width));
+    rb_ary_store(ary, 3, INT2NUM(rect->height));
+    return ary;
+}
+
+VALUE open_image_rect_to_h(VALUE self) {
+    RECT();
+    VALUE hash = rb_hash_new();
+    rb_hash_aset(hash, STR2SYM("x"), INT2NUM(rect->x));
+    rb_hash_aset(hash, STR2SYM("y"), INT2NUM(rect->y));
+    rb_hash_aset(hash, STR2SYM("width"), INT2NUM(rect->width));
+    rb_hash_aset(hash, STR2SYM("height"), INT2NUM(rect->height));
+    return hash;
+}
+
+VALUE open_image_rect_to_s(VALUE self) {
+    RECT();
+    return rb_sprintf("<Rect: x:%d, y:%d, width:%d, height:%d>", rect->x, rect->y, rect->width, rect->height);
+}
+
+VALUE open_image_rect_dup(VALUE self) {
+    struct RData *rdata = RDATA(self);
+    Rect *clone = ALLOC(Rect);
+    memcpy(clone, rdata->data, sizeof(Rect));
+    RETURN_WRAP_STRUCT(rdata->basic.klass, clone);
 }

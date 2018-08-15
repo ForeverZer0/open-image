@@ -21,4 +21,9 @@ VALUE open_image_rect_get_size(VALUE self);
 VALUE open_image_rect_set_location(VALUE self, VALUE value);
 VALUE open_image_rect_set_size(VALUE self, VALUE value);
 
+VALUE open_image_rect_to_a(VALUE self);
+VALUE open_image_rect_to_h(VALUE self);
+VALUE open_image_rect_to_s(VALUE self);
+VALUE open_image_rect_dup(VALUE self);
+
 #endif /* OPEN_IMAGE_RECT_H */

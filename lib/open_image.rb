@@ -1,17 +1,19 @@
 require_relative 'open_image/version'
 require_relative 'open_image/open_image'
-
+require_relative 'open_image/colors'
 
 module OpenImage
 
-  path = 'C:/Users/Eric/Desktop/glfw-icon.png'
+
+
+
+  path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
   img = Image.new(path)
 
+  rect = img.rect
 
-  OUT_PNG = 'C:/Users/Eric/Desktop/OUT_JPG.png'
-  color = Color.new(255, 0, 255, 128)
-  # img = Image.new(96, 128, color: color)
+  puts rect
+  puts rect.dup
 
-  
 
 end

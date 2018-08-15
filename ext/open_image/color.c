@@ -38,6 +38,9 @@ void Init_open_image_color(VALUE module) {
     rb_define_method(rb_cOpenImageColor, "to_h", open_image_color_to_h, 0);
     rb_define_method(rb_cOpenImageColor, "to_s", open_image_color_to_s, 0);
     rb_define_method(rb_cOpenImageColor, "to_i", open_image_color_to_i, 0);
+
+    rb_define_alias(rb_cOpenImageColor, "to_str", "to_s");
+    rb_define_alias(rb_cOpenImageColor, "to_int", "to_i");
 }
 
 VALUE open_image_color_alloc(VALUE klass) {
@@ -48,21 +51,37 @@ VALUE open_image_color_alloc(VALUE klass) {
 
 VALUE open_image_color_initialize(int argc, VALUE *argv, VALUE self) {
     unsigned char *color = RDATA(self)->data;
-    switch (argc)
-    {
-        case 0:
+    switch (argc) {
+        case 0:  // None
             break;
-        case 1:
-        {
+        case 1: {
+            uint argb;
+            if (RB_TYPE_P(argv[0], T_STRING))  // HTML
+            {
+                const char *hexstring = StringValueCStr(argv[0]);
+                if (hexstring[0] == '#')
+                    hexstring++;
+                argb = (uint)strtoul(hexstring, NULL, 16);
+
+                printf("%u", argb);
+            } else  // Unsigned Integer
+            {
+                argb = NUM2UINT(argv[0]);
+            }
+            color[3] = (unsigned char)((argb & 0xff000000) >> 24);
+            color[0] = (unsigned char)((argb & 0x00ff0000) >> 16);
+            color[1] = (unsigned char)((argb & 0x0000ff00) >> 8);
+            color[2] = (unsigned char)(argb & 0x000000ff);
+
+            // TODO: Test big-endian
 
             break;
         }
-        case 3:
+        case 3:  // RGB
             color[3] = 255;
-        case 4:
+        case 4:  // RGBA
         {
-            for (int i = 0; i < argc; i++)
-            {
+            for (int i = 0; i < argc; i++) {
                 char c = NUM2CHR(argv[i]);
                 memcpy(&color[i], &c, 1);
             }
@@ -94,24 +113,24 @@ VALUE open_image_color_get_a(VALUE self) {
 
 VALUE open_image_color_set_r(VALUE self, VALUE value) {
     COLOR();
-    color->r = (unsigned char) CLAMP(NUM2INT(value), 0, 255);
+    color->r = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
 
 VALUE open_image_color_set_g(VALUE self, VALUE value) {
     COLOR();
-    color->g = (unsigned char) CLAMP(NUM2INT(value), 0, 255);
+    color->g = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
 VALUE open_image_color_set_b(VALUE self, VALUE value) {
     COLOR();
-    color->b = (unsigned char) CLAMP(NUM2INT(value), 0, 255);
+    color->b = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
 
 VALUE open_image_color_set_a(VALUE self, VALUE value) {
     COLOR();
-    color->a = (unsigned char) CLAMP(NUM2INT(value), 0, 255);
+    color->a = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
 
@@ -141,5 +160,6 @@ VALUE open_image_color_to_s(VALUE self) {
 }
 
 VALUE open_image_color_to_i(VALUE self) {
-    
+    COLOR();
+    return UINT2NUM((uint)(((color->a << 24) | (color->r << 16) | (color->g << 8) | color->b) & 0xFFFFFFFFu));
 }

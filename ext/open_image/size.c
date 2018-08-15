@@ -14,6 +14,12 @@ void Init_open_image_size(VALUE module) {
     rb_define_method(rb_cOpenImageSize, "height", open_image_size_get_height, 0);
     rb_define_method(rb_cOpenImageSize, "width=", open_image_size_set_width, 1);
     rb_define_method(rb_cOpenImageSize, "height=", open_image_size_set_height, 1);
+
+    rb_define_method(rb_cOpenImageSize, "to_a", open_image_size_to_a, 0);
+    rb_define_method(rb_cOpenImageSize, "to_h", open_image_size_to_h, 0);
+    rb_define_method(rb_cOpenImageSize, "to_s", open_image_size_to_s, 0);
+    rb_define_alias(rb_cOpenImageSize, "to_str", "to_s");
+    rb_define_method(rb_cOpenImageSize, "dup", open_image_size_dup, 0);
 }
 
 VALUE open_image_size_alloc(VALUE klass) {
@@ -63,4 +69,32 @@ VALUE open_image_size_set_height(VALUE self, VALUE value) {
     SIZE();
     size->height = NUM2INT(value);
     return value;
+}
+
+VALUE open_image_size_to_a(VALUE self) {
+    SIZE();
+    VALUE ary = rb_ary_new_capa(2);
+    rb_ary_store(ary, 0, INT2NUM(size->width));
+    rb_ary_store(ary, 1, INT2NUM(size->height));
+    return ary;
+}
+
+VALUE open_image_size_to_h(VALUE self) {
+    SIZE();
+    VALUE hash = rb_hash_new();
+    rb_hash_aset(hash, STR2SYM("width"), INT2NUM(size->width));
+    rb_hash_aset(hash, STR2SYM("height"), INT2NUM(size->height));
+    return hash;
+}
+
+VALUE open_image_size_to_s(VALUE self) {
+    SIZE();
+    return rb_sprintf("<Size: width:%d, height:%d>", size->width, size->height);
+}
+
+VALUE open_image_size_dup(VALUE self) {
+    struct RData *rdata = RDATA(self);
+    Size *clone = ALLOC(Size);
+    memcpy(clone, rdata->data, sizeof(Size));
+    RETURN_WRAP_STRUCT(rdata->basic.klass, clone);
 }
