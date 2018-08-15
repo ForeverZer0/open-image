@@ -23,6 +23,7 @@ VALUE open_image_color_to_a(VALUE self);
 VALUE open_image_color_to_h(VALUE self);
 VALUE open_image_color_to_s(VALUE self);
 VALUE open_image_color_to_i(VALUE self);
+VALUE open_image_color_gl(VALUE self);
 
 VALUE open_image_color_hue(VALUE self);
 VALUE open_image_color_saturation(VALUE self);

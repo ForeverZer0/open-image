@@ -48,6 +48,7 @@ void Init_open_image_color(VALUE module) {
     rb_define_method(rb_cOpenImageColor, "to_h", open_image_color_to_h, 0);
     rb_define_method(rb_cOpenImageColor, "to_s", open_image_color_to_s, 0);
     rb_define_method(rb_cOpenImageColor, "to_i", open_image_color_to_i, 0);
+    rb_define_method(rb_cOpenImageColor, "gl", open_image_color_gl, 0);
 
     rb_define_alias(rb_cOpenImageColor, "to_str", "to_s");
     rb_define_alias(rb_cOpenImageColor, "to_int", "to_i");
@@ -155,20 +156,20 @@ VALUE open_image_color_set_a(VALUE self, VALUE value) {
 VALUE open_image_color_to_a(VALUE self) {
     COLOR();
     VALUE ary = rb_ary_new_capa(4);
-    rb_ary_store(ary, 0, color->r);
-    rb_ary_store(ary, 1, color->g);
-    rb_ary_store(ary, 2, color->b);
-    rb_ary_store(ary, 3, color->a);
+    rb_ary_store(ary, 0, INT2NUM(color->r));
+    rb_ary_store(ary, 1, INT2NUM(color->g));
+    rb_ary_store(ary, 2, INT2NUM(color->b));
+    rb_ary_store(ary, 3, INT2NUM(color->a));
     return ary;
 }
 
 VALUE open_image_color_to_h(VALUE self) {
     COLOR();
     VALUE hash = rb_hash_new();
-    rb_hash_aset(hash, STR2SYM("red"), color->r);
-    rb_hash_aset(hash, STR2SYM("green"), color->g);
-    rb_hash_aset(hash, STR2SYM("blue"), color->b);
-    rb_hash_aset(hash, STR2SYM("alpha"), color->a);
+    rb_hash_aset(hash, STR2SYM("red"), INT2NUM(color->r));
+    rb_hash_aset(hash, STR2SYM("green"), INT2NUM(color->g));
+    rb_hash_aset(hash, STR2SYM("blue"), INT2NUM(color->b));
+    rb_hash_aset(hash, STR2SYM("alpha"), INT2NUM(color->a));
     return hash;
 }
 
@@ -275,4 +276,14 @@ VALUE open_image_color_lerp_bang(VALUE self, VALUE other, VALUE amount) {
     
 
     return self;
+}
+
+VALUE open_image_color_gl(VALUE self) {
+    COLOR();
+    VALUE ary = rb_ary_new_capa(4);
+    rb_ary_store(ary, 0, DBL2NUM(color->r / 255.0));
+    rb_ary_store(ary, 1, DBL2NUM(color->g / 255.0));
+    rb_ary_store(ary, 2, DBL2NUM(color->b / 255.0));
+    rb_ary_store(ary, 3, DBL2NUM(color->a / 255.0));
+    return ary;
 }

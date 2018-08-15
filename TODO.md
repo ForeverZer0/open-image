@@ -12,6 +12,9 @@ ___
 ## Color
 
 * `gl` (floats between 0.0f and 1.0f)
+* `hue=`
+* `saturation=`
+* `brightness=`
 
 ___
 
