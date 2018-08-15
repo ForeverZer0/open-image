@@ -12,8 +12,15 @@
 
 #define RETURN_WRAP_STRUCT(klass, obj) return Data_Wrap_Struct(klass, NULL, RUBY_DEFAULT_FREE, obj)
 #define STR2SYM(str) ID2SYM(rb_intern(str))
+
 #define MIN(v1, v2) (v1 > v2 ? v2 : v1)
 #define MAX(v1, v2) (v1 < v2 ? v2 : v1)
+
+#ifndef FLT_EPSILON
+#define FLT_EPSILON 1.192092896e-07F
+#endif
+
+#define NUM2FLT(v) ((float) NUM2DBL(v))
 
 #include "ruby.h"
 #include "stb_image.h"

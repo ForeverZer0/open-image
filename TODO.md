@@ -4,12 +4,14 @@
 
 * `==`
 * `coerce`
+* `_load(binary)`
+* `_dump(level = 0)`
 
 ___
 
 ## Color
 
-* `lerp`
+* `gl` (floats between 0.0f and 1.0f)
 
 ___
 
@@ -60,3 +62,9 @@ ___
 * `adjust_tone(r, g, b)`
 * `grayscale(amount)`
 * `balance(r, g, b)`
+* `to_texture` (?)(maybe in gem extending this one?)
+
+## Gosu / OpenGL
+
+* Create gem extending this one for loading directly into OpenGL texture or `Gosu::Image` / `Ashton::Texture`
+* Interop `OpenImage::Color` with `Gosu::Color` / `Ashton::Color`

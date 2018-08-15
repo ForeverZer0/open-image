@@ -24,4 +24,12 @@ VALUE open_image_color_to_h(VALUE self);
 VALUE open_image_color_to_s(VALUE self);
 VALUE open_image_color_to_i(VALUE self);
 
+VALUE open_image_color_hue(VALUE self);
+VALUE open_image_color_saturation(VALUE self);
+VALUE open_image_color_brightness(VALUE self);
+VALUE open_image_color_hsb(VALUE self);
+
+VALUE open_image_color_lerp(VALUE self, VALUE other, VALUE amount);
+VALUE open_image_color_lerp_bang(VALUE self, VALUE other, VALUE amount);
+
 #endif /* RB_OPEN_IMAGE_COLOR_H */

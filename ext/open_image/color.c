@@ -7,6 +7,16 @@
 
 #define CLAMP(value, min, max) (value < min ? min : value > max ? max : value)
 
+#define RGB_FLOAT()              \
+    COLOR();                     \
+    float r = color->r / 255.0f; \
+    float g = color->g / 255.0f; \
+    float b = color->b / 255.0f
+
+#define RGBA_FLOAT() \
+    RGB_FLOAT();     \
+    float a = color->a / 255.0f
+
 VALUE rb_cOpenImageColor;
 
 void Init_open_image_color(VALUE module) {
@@ -41,6 +51,14 @@ void Init_open_image_color(VALUE module) {
 
     rb_define_alias(rb_cOpenImageColor, "to_str", "to_s");
     rb_define_alias(rb_cOpenImageColor, "to_int", "to_i");
+
+    rb_define_method(rb_cOpenImageColor, "hue", open_image_color_hue, 0);
+    rb_define_method(rb_cOpenImageColor, "saturation", open_image_color_saturation, 0);
+    rb_define_method(rb_cOpenImageColor, "brightness", open_image_color_brightness, 0);
+    rb_define_method(rb_cOpenImageColor, "hsb", open_image_color_hsb, 0);
+
+    rb_define_method(rb_cOpenImageColor, "lerp", open_image_color_lerp, 2);
+    rb_define_method(rb_cOpenImageColor, "lerp!", open_image_color_lerp_bang, 2);
 }
 
 VALUE open_image_color_alloc(VALUE klass) {
@@ -162,4 +180,99 @@ VALUE open_image_color_to_s(VALUE self) {
 VALUE open_image_color_to_i(VALUE self) {
     COLOR();
     return UINT2NUM((uint)(((color->a << 24) | (color->r << 16) | (color->g << 8) | color->b) & 0xFFFFFFFFu));
+}
+
+VALUE open_image_color_hue(VALUE self) {
+    RGB_FLOAT();
+    if (color->r == color->g && color->g == color->b)
+        return DBL2NUM(0.0);
+
+    float max = MAX(r, MAX(g, b));
+    float min = MIN(r, MIN(g, b));
+    float delta = max - min, hue = 0.0f;
+
+    if (fabsf(r - max) < FLT_EPSILON) {
+        hue = (g - b) / delta;
+    } else if (fabsf(g - max) < FLT_EPSILON) {
+        hue = 2.0f + (b - r) / delta;
+    } else if (fabsf(b - max) < FLT_EPSILON) {
+        hue = 4.0f + (r - g) / delta;
+    }
+
+    hue *= 60.0f;
+    if (hue < 0.0f)
+        hue += 360.0f;
+
+    return DBL2NUM(hue);
+}
+
+VALUE open_image_color_saturation(VALUE self) {
+    RGB_FLOAT();
+    float max = MAX(r, MAX(g, b));
+    float min = MIN(r, MIN(g, b));
+    float brightness, s = 0.0f;
+
+    if (fabsf(max - min) > FLT_EPSILON) {
+        brightness = (max + min) * 0.5f;
+        s = (max - min) / (brightness <= 0.5f ? (max + min) : (2 - max - min));
+    }
+    return DBL2NUM(s);
+}
+
+VALUE open_image_color_brightness(VALUE self) {
+    RGB_FLOAT();
+    float max = MAX(r, MAX(g, b));
+    float min = MIN(r, MIN(g, b));
+    return DBL2NUM((max + min) * 0.5f);
+}
+
+VALUE open_image_color_hsb(VALUE self) {
+    RGB_FLOAT();
+    float max = MAX(r, MAX(g, b));
+    float min = MIN(r, MIN(g, b));
+    float delta = max - min, brightness = (max + min) * 0.5f, hue = 0.0f, saturation = 0.0f;
+
+    if (fabsf(max - min) > FLT_EPSILON) {
+        saturation = (max - min) / (brightness <= 0.5f ? (max + min) : (2 - max - min));
+    }
+
+    if (fabsf(r - max) < FLT_EPSILON) {
+        hue = (g - b) / delta;
+    } else if (fabsf(g - max) < FLT_EPSILON) {
+        hue = 2.0f + (b - r) / delta;
+    } else if (fabsf(b - max) < FLT_EPSILON) {
+        hue = 4.0f + (r - g) / delta;
+    }
+
+    hue *= 60.0f;
+    if (hue < 0.0f)
+        hue += 360.0f;
+
+    VALUE hsb = rb_ary_new_capa(3);
+    rb_ary_store(hsb, 0, DBL2NUM(hue));
+    rb_ary_store(hsb, 1, DBL2NUM(saturation));
+    rb_ary_store(hsb, 2, DBL2NUM(brightness));
+    return hsb;
+}
+
+VALUE open_image_color_lerp(VALUE self, VALUE other, VALUE amount) {
+    Color *c1, *c2, *result;
+    Data_Get_Struct(self, Color, c1);
+    Data_Get_Struct(other, Color, c2);
+    result = ALLOC(Color);
+    float w = CLAMP(NUM2FLT(amount), 0.0f, 1.0f);
+    result->r = (unsigned char)roundf(c1->r + (c2->r - c1->r) * w);
+    result->g = (unsigned char)roundf(c1->g + (c2->g - c1->g) * w);
+    result->b = (unsigned char)roundf(c1->b + (c2->b - c1->b) * w);
+    result->a = (unsigned char)roundf(c1->a + (c2->a - c1->a) * w);
+    RETURN_WRAP_STRUCT(CLASS_OF(self), result);
+}
+
+VALUE open_image_color_lerp_bang(VALUE self, VALUE other, VALUE amount) {
+    Color *c1, *c2;
+    Data_Get_Struct(self, Color, c1);
+    Data_Get_Struct(other, Color, c2);
+    
+
+    return self;
 }
