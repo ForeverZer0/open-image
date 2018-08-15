@@ -13,6 +13,14 @@ module OpenImage
       @names
     end
 
+    def self.each
+      return enum_for __method__ unless block_given?
+      @names.each do |name|
+        sym = name.downcase.tr(' ', '_').to_sym
+        yield method(sym).call rescue next
+      end
+    end
+
     define_color :alice_blue, 0xFFF0F8FF
     define_color :antique_white, 0xFFFAEBD7
     define_color :aqua, 0xFF00FFFF

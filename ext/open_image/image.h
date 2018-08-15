@@ -33,7 +33,4 @@ VALUE open_image_rect(VALUE self);
 VALUE open_image_to_s(VALUE self);
 VALUE open_image_dup(VALUE self);
 
-// VALUE open_image_draw_rect(VALUE self);
-// VALUE open_image_blit(VALUE self);
-
 #endif /* RB_OPEN_IMAGE_IMAGE_H */
