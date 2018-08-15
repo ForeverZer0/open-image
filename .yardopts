@@ -2,3 +2,4 @@
 --title 'OpenImage Documentation'
 --charset utf-8
 --markup markdown
+lib/**/*.rb
