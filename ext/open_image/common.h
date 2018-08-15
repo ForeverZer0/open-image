@@ -2,6 +2,14 @@
 #ifndef RB_OPEN_IMAGE_COMMON_H
 #define RB_OPEN_IMAGE_COMMON_H 1
 
+#define OPEN_IMAGE_DEBUG 0 
+
+#if OPEN_IMAGE_DEBUG
+#define DEBUG printf
+#else
+#define DEBUG(...) do {} while (0)
+#endif
+
 #define STBI_MALLOC ruby_xmalloc
 #define STBI_REALLOC ruby_xrealloc
 #define STBI_FREE ruby_xfree

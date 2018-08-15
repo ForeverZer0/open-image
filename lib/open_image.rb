@@ -10,29 +10,38 @@ module OpenImage
   # path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
   # img = Image.new(path)
 
-  puts Colors.white.lerp(Colors.black, 0.5)
+  # puts Colors.white.lerp(Colors.black, 0.5)
 
-  exit
+  # exit
 
-  color = Colors.light_goldenrod_yellow
+  color = Colors.alice_blue
 
-  count = 1_000_000
+  puts color 
+  hsb = color.hsb
 
-  Benchmark.bmbm do |x|
+  p hsb
 
-    x.report do 
-      count.times do
-        [color.hue, color.saturation, color.brightness]
-      end
-    end
+  c = Color.from_hsb(*hsb)
 
-    x.report do 
-      count.times do
-        color.hsb
-      end
-    end
+  puts c
 
-  end
+  # count = 1_000_000
+
+  # Benchmark.bmbm do |x|
+
+  #   x.report do 
+  #     count.times do
+  #       360 * 0.016666666666
+  #     end
+  #   end
+
+  #   x.report do 
+  #     count.times do
+  #       360 / 60.0
+  #     end
+  #   end
+
+  # end
 
 
 

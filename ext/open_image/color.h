@@ -5,9 +5,12 @@
 #include <string.h>
 #include "common.h"
 
+static inline void open_image_color_hsb2rgb(Color *color, float hue, float saturation, float brightness);
+
 void Init_open_image_color(VALUE module);
 VALUE open_image_color_alloc(VALUE klass);
 VALUE open_image_color_initialize(int argc, VALUE *argv, VALUE self);
+VALUE open_image_color_from_hsb(int argc, VALUE *argv, VALUE klass);
 
 VALUE open_image_color_get_r(VALUE self);
 VALUE open_image_color_get_g(VALUE self);
@@ -27,8 +30,11 @@ VALUE open_image_color_gl(VALUE self);
 
 VALUE open_image_color_hue(VALUE self);
 VALUE open_image_color_saturation(VALUE self);
+VALUE open_image_color_lightness(VALUE self);
 VALUE open_image_color_brightness(VALUE self);
+
 VALUE open_image_color_hsb(VALUE self);
+VALUE open_image_color_hsl(VALUE self);
 
 VALUE open_image_color_lerp(VALUE self, VALUE other, VALUE amount);
 VALUE open_image_color_lerp_bang(VALUE self, VALUE other, VALUE amount);
