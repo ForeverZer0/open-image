@@ -5,7 +5,7 @@
     Color *color; \
     Data_Get_Struct(self, Color, color)
 
-#define CLAMP(value, min, max) (value < min ? min : value > max ? max : value)
+// #define CLAMP(value, min, max) (value < min ? min : value > max ? max : value)
 
 #define RGB_FLOAT()              \
     COLOR();                     \

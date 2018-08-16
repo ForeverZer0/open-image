@@ -1,8 +1,11 @@
 #include "open_image.h"
 
 VALUE mOpenImage;
-VALUE cImage;
 VALUE eOpenImageError;
+
+#if USE_FIDDLE
+VALUE cFiddlePointer;
+#endif
 
 void Init_open_image(void) {
     mOpenImage = rb_define_module("OpenImage");
@@ -13,4 +16,10 @@ void Init_open_image(void) {
     Init_img_rect(mOpenImage);
     Init_img_color(mOpenImage);
     Init_img_image(mOpenImage);
+
+#if USE_FIDDLE
+    rb_require("fiddle");
+    VALUE fiddle = rb_const_get(rb_cObject, rb_intern("Fiddle"));
+    cFiddlePointer = rb_const_get(fiddle, rb_intern("Pointer"));
+#endif
 }

@@ -10,18 +10,18 @@ module OpenImage
   # path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
   # img = Image.new(path)
 
-  # puts Colors.white.lerp(Colors.black, 0.5)
-
   # exit
 
   color = Colors.red
+
+  color.r = 278
+  color.a = -1.7
 
   p [color.r, color.g, color.b, color.a] 
   p [color.red, color.green, color.blue, color.alpha] 
 
 
   # count = 1_000_000
-
   # Benchmark.bmbm do |x|
 
   #   x.report do 

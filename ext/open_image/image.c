@@ -10,7 +10,6 @@
 #define COLOR_COMP 4 /* Number of color components */
 
 VALUE cImage;
-VALUE cImagePointer;
 
 void Init_img_image(VALUE module) {
     cImage = rb_define_class_under(module, "Image", rb_cObject);
@@ -27,8 +26,8 @@ void Init_img_image(VALUE module) {
     rb_define_alias(cImage, "columns", "width");
     rb_define_alias(cImage, "to_blob", "pixels");
     rb_define_method(cImage, "dup", img_image_dup, 0);
-
     rb_define_method(cImage, "ptr", img_image_ptr, 0);
+
     rb_define_method(cImage, "size", img_image_size, 0);
     rb_define_method(cImage, "rect", img_image_rect, 0);
     rb_define_method(cImage, "to_s", img_image_to_s, 0);
@@ -138,23 +137,6 @@ VALUE img_image_pixels(VALUE self) {
     IMAGE();
     long size = (long)(image->width * image->height * COLOR_SIZE);
     return rb_str_new(image->pixels, size);
-}
-
-VALUE img_image_ptr(VALUE self) {
-    if (!cImagePointer) {
-        rb_require("fiddle");
-        VALUE fiddle = rb_const_get(rb_cObject, rb_intern("Fiddle"));
-        cImagePointer = rb_const_get(fiddle, rb_intern("Pointer"));
-    }
-
-    IMAGE();
-    VALUE *args = xmalloc(sizeof(VALUE) * 2);
-    args[0] = LL2NUM((size_t)&image->pixels);
-    args[1] = UINT2NUM(image->width * image->height * 4);
-    VALUE pointer = rb_obj_alloc(cImagePointer);
-    rb_obj_call_init(pointer, 2, args);
-    xfree(args);
-    return pointer;
 }
 
 VALUE img_image_save_png(VALUE self, VALUE path) {
@@ -395,4 +377,19 @@ VALUE img_image_dup(VALUE self) {
     memcpy(*(&clone->pixels), *(&image->pixels), size);
 
     return Data_Wrap_Struct(CLASS_OF(self), NULL, img_image_free, clone);
+}
+
+VALUE img_image_ptr(VALUE self) {
+    IMAGE();
+#if USE_FIDDLE
+    VALUE *args = xmalloc(sizeof(VALUE) * 2);
+    args[0] = LL2NUM((size_t)&image->pixels);
+    args[1] = UINT2NUM(image->width * image->height * 4);
+    VALUE pointer = rb_obj_alloc(cFiddlePointer);
+    rb_obj_call_init(pointer, 2, args);
+    xfree(args);
+    return pointer;
+#else
+    return LL2NUM((size_t)&image->pixels);
+#endif
 }
