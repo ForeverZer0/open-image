@@ -14,39 +14,20 @@ ___
 * `lightness=`
 * `hue=`
 * `saturation=`
-* `brightness=`
+* `brightness=` (alias `value=`)
 
 ___
 
 ## Point
 
-* `offset(x, y)`
-* `offset!(point)`
-* `offset!(x, y)`
-* `move(x, y)`
-
 ___
 
 ## Size
-
-* `resize(width, height)`
 
 ___
 
 ## Rect
 
-* `from_ltrb`
-* `inflate`
-* `inflate!`
-* `offset(point)`
-* `offset(x, y)`
-* `offset!(point)`
-* `offset!(x, y)`
-* `move(x, y)`
-* `resize(width, height)`
-* `intersect(rect)`
-* `intersects?(rect)`
-* `union(rect)`
 * `include?(x, y)`
 * `include?(point)`
 * `include?(rect)`

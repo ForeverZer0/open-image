@@ -11,7 +11,14 @@
 #define STBIW_FREE STBI_FREE
 
 #include "ruby.h"
+
+#if HAVE_RUBY_VERSION_H
 #include "ruby/version.h"
+#define USE_FIDDLE RUBY_API_VERSION_MAJOR >= 2
+#else
+#define USE_FIDDLE 0
+#endif
+
 #include "stb_image.h"
 #include "stb_image_write.h"
 
@@ -27,28 +34,11 @@
 #define RETURN_WRAP_STRUCT(klass, obj) return Data_Wrap_Struct(klass, NULL, RUBY_DEFAULT_FREE, obj)
 #define STR2SYM(str) ID2SYM(rb_intern(str))
 
-#define MAX(a, b) \
-    ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-
-#define MIN(a, b) \
-    ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
-
-#define CLAMP(value, min, max) \
-    ({ __typeof__ (value) _value = (value); \
-       __typeof__ (min) _min = (min); \
-       __typeof__ (max) _max = (max); \
-       _value < _min ? _min : _value > _max ? _max : _value; })
-
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.192092896e-07F
 #endif
 
 #define NUM2FLT(v) ((float)NUM2DBL(v))
-#define USE_FIDDLE RUBY_API_VERSION_MAJOR < 2
 
 typedef unsigned int uint;
 
@@ -92,5 +82,21 @@ extern VALUE cRect;
 #if USE_FIDDLE
 extern VALUE cFiddlePointer;
 #endif
+
+inline int imax(int v1, int v2) {
+    return v1 > v2 ? v1 : v2;
+}
+
+inline int imin(int v1, int v2) {
+    return v1 < v2 ? v1 : v2;
+}
+
+inline int iclamp(int value, int min, int max) {
+    return value < min ? min : value > max ? max : value;
+}
+
+inline float fclamp(float value, float min, float max) {
+    return value < min ? min : value > max ? max : value;
+}
 
 #endif /* RB_OPEN_IMAGE_COMMON_H */

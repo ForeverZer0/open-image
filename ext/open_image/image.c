@@ -233,16 +233,16 @@ VALUE img_image_fill_rect(int argc, VALUE *argv, VALUE self) {
     if (argc == 2) {
         Rect *rect;
         Data_Get_Struct(argv[0], Rect, rect);
-        l = MAX(rect->x, 0);
-        t = MAX(rect->y, 0);
-        r = MIN(l + NUM2INT(rect->width), image->width - 1);
-        b = MIN(t + NUM2INT(rect->height), image->height - 1);
+        l = imax(rect->x, 0);
+        t = imax(rect->y, 0);
+        r = imin(l + NUM2INT(rect->width), image->width - 1);
+        b = imin(t + NUM2INT(rect->height), image->height - 1);
         Data_Get_Struct(argv[1], Color, color);
     } else if (argc == 5) {
-        l = MAX(NUM2INT(argv[0]), 0);
-        t = MAX(NUM2INT(argv[1]), 0);
-        r = MIN(NUM2INT(argv[2]) + l, image->width - 1);
-        b = MIN(NUM2INT(argv[3]) + t, image->height - 1);
+        l = imax(NUM2INT(argv[0]), 0);
+        t = imax(NUM2INT(argv[1]), 0);
+        r = imin(NUM2INT(argv[2]) + l, image->width - 1);
+        b = imin(NUM2INT(argv[3]) + t, image->height - 1);
         Data_Get_Struct(argv[4], Color, color);
     } else
         rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 2, 5)", argc);
@@ -266,15 +266,15 @@ VALUE img_image_subimage(int argc, VALUE *argv, VALUE self) {
     if (argc == 1) {
         Rect *rect;
         Data_Get_Struct(argv[0], Rect, rect);
-        l = MAX(rect->x, 0);
-        t = MAX(rect->y, 0);
-        r = MIN(l + NUM2INT(rect->width), image->width - 1);
-        b = MIN(t + NUM2INT(rect->height), image->height - 1);
+        l = imax(rect->x, 0);
+        t = imax(rect->y, 0);
+        r = imin(l + NUM2INT(rect->width), image->width - 1);
+        b = imin(t + NUM2INT(rect->height), image->height - 1);
     } else if (argc == 4) {
-        l = MAX(NUM2INT(argv[0]), 0);
-        t = MAX(NUM2INT(argv[1]), 0);
-        r = MIN(NUM2INT(argv[2]) + l, image->width - 1);
-        b = MIN(NUM2INT(argv[3]) + t, image->height - 1);
+        l = imax(NUM2INT(argv[0]), 0);
+        t = imax(NUM2INT(argv[1]), 0);
+        r = imin(NUM2INT(argv[2]) + l, image->width - 1);
+        b = imin(NUM2INT(argv[3]) + t, image->height - 1);
     } else
         rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 4)", argc);
 

@@ -11,10 +11,14 @@ void Init_img_point(VALUE module);
 VALUE img_point_alloc(VALUE klass);
 VALUE img_point_initialize(int argc, VALUE *argv, VALUE self);
 
+VALUE img_point_set(VALUE self, VALUE x, VALUE y);
 VALUE img_point_get_x(VALUE self);
 VALUE img_point_get_y(VALUE self);
 VALUE img_point_set_x(VALUE self, VALUE value);
 VALUE img_point_set_y(VALUE self, VALUE value);
+
+VALUE img_point_offset(int argc, VALUE *argv, VALUE self);
+VALUE img_point_offset_bang(int argc, VALUE *argv, VALUE self);
 
 VALUE img_point_to_a(VALUE self);
 VALUE img_point_to_h(VALUE self);

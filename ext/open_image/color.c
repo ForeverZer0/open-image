@@ -5,8 +5,6 @@
     Color *color; \
     Data_Get_Struct(self, Color, color)
 
-// #define CLAMP(value, min, max) (value < min ? min : value > max ? max : value)
-
 #define RGB_FLOAT()              \
     COLOR();                     \
     float r = color->r / 255.0f; \
@@ -159,35 +157,35 @@ VALUE img_color_getf_a(VALUE self) {
 VALUE img_color_set_r(VALUE self, VALUE value) {
     COLOR();
     if (RB_FLOAT_TYPE_P(value))
-        color->r = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+        color->r = (unsigned char)roundf(fclamp(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
     else
-        color->r = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+        color->r = (unsigned char)iclamp(NUM2INT(value), 0, 255);
     return value;
 }
 
 VALUE img_color_set_g(VALUE self, VALUE value) {
     COLOR();
     if (RB_FLOAT_TYPE_P(value))
-        color->g = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+        color->g = (unsigned char)roundf(fclamp(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
     else
-        color->g = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+        color->g = (unsigned char)iclamp(NUM2INT(value), 0, 255);
     return value;
 }
 VALUE img_color_set_b(VALUE self, VALUE value) {
     COLOR();
     if (RB_FLOAT_TYPE_P(value))
-        color->b = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+        color->b = (unsigned char)roundf(fclamp(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
     else
-        color->b = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+        color->b = (unsigned char)iclamp(NUM2INT(value), 0, 255);
     return value;
 }
 
 VALUE img_color_set_a(VALUE self, VALUE value) {
     COLOR();
     if (RB_FLOAT_TYPE_P(value))
-        color->a = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+        color->a = (unsigned char)roundf(fclamp(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
     else
-        color->a = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+        color->a = (unsigned char)iclamp(NUM2INT(value), 0, 255);
     return value;
 }
 
@@ -226,7 +224,7 @@ VALUE img_color_lerp(VALUE self, VALUE other, VALUE amount) {
     Data_Get_Struct(self, Color, c1);
     Data_Get_Struct(other, Color, c2);
     result = ALLOC(Color);
-    float w = CLAMP(NUM2FLT(amount), 0.0f, 1.0f);
+    float w = fclamp(NUM2FLT(amount), 0.0f, 1.0f);
     result->r = (unsigned char)roundf(c1->r + (c2->r - c1->r) * w);
     result->g = (unsigned char)roundf(c1->g + (c2->g - c1->g) * w);
     result->b = (unsigned char)roundf(c1->b + (c2->b - c1->b) * w);
@@ -238,7 +236,7 @@ VALUE img_color_lerp_bang(VALUE self, VALUE other, VALUE amount) {
     Color *c1, *c2;
     Data_Get_Struct(self, Color, c1);
     Data_Get_Struct(other, Color, c2);
-    float w = CLAMP(NUM2FLT(amount), 0.0f, 1.0f);
+    float w = fclamp(NUM2FLT(amount), 0.0f, 1.0f);
     c1->r = (unsigned char)roundf(c1->r + (c2->r - c1->r) * w);
     c1->g = (unsigned char)roundf(c1->g + (c2->g - c1->g) * w);
     c1->b = (unsigned char)roundf(c1->b + (c2->b - c1->b) * w);
@@ -261,8 +259,8 @@ VALUE img_color_hue(VALUE self) {
     if (color->r == color->g && color->g == color->b)
         return DBL2NUM(0.0);
 
-    float max = MAX(r, MAX(g, b));
-    float min = MIN(r, MIN(g, b));
+    float max = fmax(r, fmax(g, b));
+    float min = fmin(r, fmin(g, b));
     float delta = max - min, hue = 0.0f;
 
     if (fabsf(r - max) < FLT_EPSILON) {
@@ -282,8 +280,8 @@ VALUE img_color_hue(VALUE self) {
 
 VALUE img_color_saturation(VALUE self) {
     RGB_FLOAT();
-    float max = MAX(r, MAX(g, b));
-    float min = MIN(r, MIN(g, b));
+    float max = fmax(r, fmax(g, b));
+    float min = fmin(r, fmin(g, b));
     float lightness, s = 0.0f;
 
     if (fabsf(max - min) > FLT_EPSILON) {
@@ -295,21 +293,21 @@ VALUE img_color_saturation(VALUE self) {
 
 VALUE img_color_lightness(VALUE self) {
     RGB_FLOAT();
-    float max = MAX(r, MAX(g, b));
-    float min = MIN(r, MIN(g, b));
+    float max = fmax(r, fmax(g, b));
+    float min = fmin(r, fmin(g, b));
     return DBL2NUM((max + min) * 0.5f);
 }
 
 VALUE img_color_brightness(VALUE self) {
     RGB_FLOAT();
-    float max = MAX(r, MAX(g, b));
+    float max = fmax(r, fmax(g, b));
     return DBL2NUM(max);
 }
 
 VALUE img_color_hsl(VALUE self) {
     RGB_FLOAT();
-    float max = MAX(r, MAX(g, b));
-    float min = MIN(r, MIN(g, b));
+    float max = fmax(r, fmax(g, b));
+    float min = fmin(r, fmin(g, b));
     float delta = max - min, lightness = (max + min) * 0.5f, hue = 0.0f, saturation = 0.0f;
 
     if (delta > FLT_EPSILON) {
@@ -336,8 +334,8 @@ VALUE img_color_hsl(VALUE self) {
 
 VALUE img_color_hsb(VALUE self) {
     RGB_FLOAT();
-    float max = MAX(r, MAX(g, b));
-    float min = MIN(r, MIN(g, b));
+    float max = fmax(r, fmax(g, b));
+    float min = fmin(r, fmin(g, b));
     float delta = max - min, s = 0.0f, h = 0.0f, v = max;
 
     if (delta > FLT_EPSILON) {
@@ -364,13 +362,13 @@ VALUE img_color_from_hsb(int argc, VALUE *argv, VALUE klass) {
     VALUE hue, saturation, brightness, alpha;
     rb_scan_args(argc, argv, "31", &hue, &saturation, &brightness, &alpha);
 
-    float h = CLAMP(NUM2FLT(hue), 0.0f, 360.0f);
-    float s = CLAMP(NUM2FLT(saturation), 0.0f, 1.0f);
-    float b = CLAMP(NUM2FLT(brightness), 0.0f, 1.0f);
+    float h = fclamp(NUM2FLT(hue), 0.0f, 360.0f);
+    float s = fclamp(NUM2FLT(saturation), 0.0f, 1.0f);
+    float b = fclamp(NUM2FLT(brightness), 0.0f, 1.0f);
 
     Color *color = ALLOC(Color);
     img_color_hsb2rgb(color, h, s, b);
-    color->a = (unsigned char)(NIL_P(alpha) ? 255 : CLAMP(NUM2INT(alpha), 0, 255));
+    color->a = (unsigned char)(NIL_P(alpha) ? 255 : iclamp(NUM2INT(alpha), 0, 255));
     RETURN_WRAP_STRUCT(klass, color);
 }
 
@@ -378,9 +376,9 @@ VALUE img_color_from_hsl(int argc, VALUE *argv, VALUE klass) {
     VALUE hue, saturation, lightness, alpha;
     rb_scan_args(argc, argv, "31", &hue, &saturation, &lightness, &alpha);
 
-    float h = CLAMP(NUM2FLT(hue), 0.0f, 360.0f);
-    float s = CLAMP(NUM2FLT(saturation), 0.0f, 1.0f);
-    float l = CLAMP(NUM2FLT(lightness), 0.0f, 1.0f);
+    float h = fclamp(NUM2FLT(hue), 0.0f, 360.0f);
+    float s = fclamp(NUM2FLT(saturation), 0.0f, 1.0f);
+    float l = fclamp(NUM2FLT(lightness), 0.0f, 1.0f);
     float sat, b;
 
     // Convert the saturation and lightness to be consistent with HSB/HSV, then compute
@@ -388,7 +386,7 @@ VALUE img_color_from_hsl(int argc, VALUE *argv, VALUE klass) {
 
     Color *color = ALLOC(Color);
     img_color_hsb2rgb(color, h, sat, b);
-    color->a = (unsigned char)(NIL_P(alpha) ? 255 : CLAMP(NUM2INT(alpha), 0, 255));
+    color->a = (unsigned char)(NIL_P(alpha) ? 255 : iclamp(NUM2INT(alpha), 0, 255));
     RETURN_WRAP_STRUCT(klass, color);
 }
 

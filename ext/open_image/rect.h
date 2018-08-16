@@ -8,6 +8,7 @@ VALUE img_rect_alloc(VALUE klass);
 VALUE img_rect_initialize(int argc, VALUE *argv, VALUE self);
 VALUE img_rect_from_ltrb(VALUE klass, VALUE left, VALUE top, VALUE right, VALUE bottom);
 
+VALUE img_rect_set(VALUE self, VALUE x, VALUE y, VALUE width, VALUE height);
 VALUE img_rect_get_x(VALUE self);
 VALUE img_rect_get_y(VALUE self);
 VALUE img_rect_get_width(VALUE self);
@@ -32,5 +33,15 @@ VALUE img_rect_to_a(VALUE self);
 VALUE img_rect_to_h(VALUE self);
 VALUE img_rect_to_s(VALUE self);
 VALUE img_rect_dup(VALUE self);
+
+VALUE img_rect_offset(int argc, VALUE *argv, VALUE self);
+VALUE img_rect_offset_bang(int argc, VALUE *argv, VALUE self);
+VALUE img_rect_inflate(int argc, VALUE *argv, VALUE self);
+VALUE img_rect_inflate_bang(int argc, VALUE *argv, VALUE self);
+VALUE img_rect_intersect(VALUE self, VALUE other);
+VALUE img_rect_intersect_bang(VALUE self, VALUE other);
+VALUE img_rect_intersects_p(VALUE self, VALUE other);
+VALUE img_rect_union(VALUE self, VALUE other);
+VALUE img_rect_union_bang(VALUE self, VALUE other);
 
 #endif /* OPEN_IMAGE_RECT_H */

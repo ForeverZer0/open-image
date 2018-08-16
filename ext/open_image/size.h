@@ -7,6 +7,7 @@ void Init_img_size(VALUE module);
 VALUE img_size_alloc(VALUE klass);
 VALUE img_size_initialize(int argc, VALUE *argv, VALUE self);
 
+VALUE img_size_set(VALUE self, VALUE width, VALUE height);
 VALUE img_size_get_width(VALUE self);
 VALUE img_size_get_height(VALUE self);
 VALUE img_size_set_width(VALUE self, VALUE value);

@@ -12,6 +12,7 @@ void Init_img_size(VALUE module) {
     rb_define_alloc_func(cSize, img_size_alloc);
     rb_define_method(cSize, "initialize", img_size_initialize, -1);
 
+    rb_define_method(cSize, "set", img_size_set, 2);
     rb_define_method(cSize, "width", img_size_get_width, 0);
     rb_define_method(cSize, "height", img_size_get_height, 0);
     rb_define_method(cSize, "width=", img_size_set_width, 1);
@@ -49,6 +50,13 @@ VALUE img_size_initialize(int argc, VALUE *argv, VALUE self) {
             rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 0, 1, 2)", argc);
     }
     return Qnil;
+}
+
+VALUE img_size_set(VALUE self, VALUE width, VALUE height) {
+    SIZE();
+    size->width = NUM2INT(width);
+    size->height = NUM2INT(height);
+    return self;
 }
 
 VALUE img_size_get_width(VALUE self) {

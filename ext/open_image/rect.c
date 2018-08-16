@@ -16,7 +16,7 @@ void Init_img_rect(VALUE module) {
 
     rb_define_method(cRect, "empty?", img_rect_empty_p, 0);
 
-
+    rb_define_method(cRect, "set", img_rect_set, 4);
     rb_define_method(cRect, "x", img_rect_get_x, 0);
     rb_define_method(cRect, "y", img_rect_get_y, 0);
     rb_define_method(cRect, "width", img_rect_get_width, 0);
@@ -43,6 +43,16 @@ void Init_img_rect(VALUE module) {
     rb_define_method(cRect, "to_s", img_rect_to_s, 0);
     rb_define_alias(cRect, "to_str", "to_s");
     rb_define_method(cRect, "dup", img_rect_dup, 0);
+
+    rb_define_method(cRect, "offset", img_rect_offset, -1);
+    rb_define_method(cRect, "offset!", img_rect_offset_bang, -1);
+    rb_define_method(cRect, "inflate", img_rect_inflate, -1);
+    rb_define_method(cRect, "inflate!", img_rect_inflate_bang, -1);
+    rb_define_method(cRect, "intersect", img_rect_intersect, 1);
+    rb_define_method(cRect, "intersect!", img_rect_intersect_bang, 1);
+    rb_define_method(cRect, "intersects?", img_rect_intersects_p, 1);
+    rb_define_method(cRect, "union", img_rect_union, 1);
+    rb_define_method(cRect, "union!", img_rect_union_bang, 1);
 }
 
 VALUE img_rect_alloc(VALUE klass) {
@@ -238,4 +248,181 @@ VALUE img_rect_area(VALUE self) {
 VALUE img_rect_perimeter(VALUE self) {
     RECT();
     return INT2NUM((abs(rect->width) + abs(rect->height)) * 2);
+}
+
+VALUE img_rect_set(VALUE self, VALUE x, VALUE y, VALUE width, VALUE height) {
+    RECT();
+    rect->x = NUM2INT(x);
+    rect->y = NUM2INT(y);
+    rect->width = NUM2INT(width);
+    rect->height = NUM2INT(height);
+    return self;
+}
+
+VALUE img_rect_offset(int argc, VALUE *argv, VALUE self) {
+    Rect *r1, *result;
+    Data_Get_Struct(self, Rect, r1);
+    result = ALLOC(Rect);
+    if (argc == 1) {
+        Rect *r2;
+        Data_Get_Struct(argv[0], Rect, r2);
+        result->x = r1->x + r2->x;
+        result->y = r1->y + r2->y;
+    } else if (argc == 2) {
+        result->x = r1->x + NUM2INT(argv[0]);
+        result->y = r1->y + NUM2INT(argv[1]);
+    } else
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 2)", argc);
+    result->width = r1->width;
+    result->height = r1->height;
+    RETURN_WRAP_STRUCT(CLASS_OF(self), result);
+}
+
+VALUE img_rect_offset_bang(int argc, VALUE *argv, VALUE self) {
+    RECT();
+    if (argc == 1) {
+        Rect *r2;
+        Data_Get_Struct(argv[0], Rect, r2);
+        rect->x = rect->x + r2->x;
+        rect->y = rect->y + r2->y;
+    } else if (argc == 2) {
+        rect->x = rect->x + NUM2INT(argv[0]);
+        rect->y = rect->y + NUM2INT(argv[1]);
+    } else
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 2)", argc);
+    return self;
+}
+
+VALUE img_rect_inflate(int argc, VALUE *argv, VALUE self) {
+    RECT();
+    Rect *result = ALLOC(Rect);
+    if (argc == 1) {
+        Size *size;
+        Data_Get_Struct(argv[0], Size, size);
+        result->x = rect->x - size->width;
+        result->y = rect->y - size->height;
+        result->width = rect->width + (size->width * 2);
+        result->height = rect->height + (size->height * 2);
+    } else if (argc == 2) {
+        int x = NUM2INT(argv[0]);
+        int y = NUM2INT(argv[1]);
+        result->x = rect->x - x;
+        result->y = rect->y - y;
+        result->width = rect->width + (x * 2);
+        result->height = rect->height + (y * 2);
+    }
+    RETURN_WRAP_STRUCT(CLASS_OF(self), result);
+}
+
+VALUE img_rect_inflate_bang(int argc, VALUE *argv, VALUE self) {
+    RECT();
+    if (argc == 1) {
+        Size *size;
+        Data_Get_Struct(argv[0], Size, size);
+        rect->x = rect->x - size->width;
+        rect->y = rect->y - size->height;
+        rect->width = rect->width + (size->width * 2);
+        rect->height = rect->height + (size->height * 2);
+    } else if (argc == 2) {
+        int x = NUM2INT(argv[0]);
+        int y = NUM2INT(argv[1]);
+        rect->x = rect->x - x;
+        rect->y = rect->y - y;
+        rect->width = rect->width + (x * 2);
+        rect->height = rect->height + (y * 2);
+    }
+    return self;
+}
+
+VALUE img_rect_intersect(VALUE self, VALUE other) {
+    Rect *r1, *r2, *result;
+    Data_Get_Struct(self, Rect, r1);
+    Data_Get_Struct(other, Rect, r2);
+    result = ALLOC(Rect);
+
+    int x1 = imax(r1->x, r2->x);
+    int x2 = imin(r1->x + r1->width, r2->x + r2->width);
+    int y1 = imax(r1->y, r2->y);
+    int y2 = imin(r1->y + r1->height, r2->y + r2->height);
+
+    if (x2 >= x1 && y2 >= y1) {
+        result->x = x1;
+        result->y = y1;
+        result->width = x2 - x1;
+        result->height = y2 - y1;
+    } else {
+        memset(result, 0, sizeof(Rect));
+    }
+    RETURN_WRAP_STRUCT(CLASS_OF(self), result);
+}
+
+VALUE img_rect_intersect_bang(VALUE self, VALUE other) {
+    Rect *r1, *r2;
+    Data_Get_Struct(self, Rect, r1);
+    Data_Get_Struct(other, Rect, r2);
+
+    int x1 = imax(r1->x, r2->x);
+    int x2 = imin(r1->x + r1->width, r2->x + r2->width);
+    int y1 = imax(r1->y, r2->y);
+    int y2 = imin(r1->y + r1->height, r2->y + r2->height);
+
+    if (x2 >= x1 && y2 >= y1) {
+        r1->x = x1;
+        r1->y = y1;
+        r1->width = x2 - x1;
+        r1->height = y2 - y1;
+    } else {
+        memset(r1, 0, sizeof(Rect));
+    }
+    return self;
+}
+
+VALUE img_rect_intersects_p(VALUE self, VALUE other) {
+    Rect *r1, *r2;
+    Data_Get_Struct(self, Rect, r1);
+    Data_Get_Struct(other, Rect, r2);
+
+    return (r2->x < r1->x + r1->width) &&
+                   (r1->x < (r2->x + r2->width)) &&
+                   (r2->y < r1->y + r1->height) &&
+                   (r1->y < r2->y + r2->height)
+               ? Qtrue
+               : Qfalse;
+}
+
+VALUE img_rect_union(VALUE self, VALUE other) {
+    Rect *r1, *r2, *result;
+    Data_Get_Struct(self, Rect, r1);
+    Data_Get_Struct(other, Rect, r2);
+    result = ALLOC(Rect);
+
+    int x1 = imin(r1->x, r2->x);
+    int x2 = imax(r1->x + r1->width, r2->x + r2->width);
+    int y1 = imin(r1->y, r2->y);
+    int y2 = imax(r1->y + r1->height, r2->y + r2->height);
+
+    result->x = x1;
+    result->y = y1;
+    result->width = x2 - x1;
+    result->height = y2 - y1;
+
+    RETURN_WRAP_STRUCT(CLASS_OF(self), result);
+}
+
+VALUE img_rect_union_bang(VALUE self, VALUE other) {
+    Rect *r1, *r2;
+    Data_Get_Struct(self, Rect, r1);
+    Data_Get_Struct(other, Rect, r2);
+
+    int x1 = imin(r1->x, r2->x);
+    int x2 = imax(r1->x + r1->width, r2->x + r2->width);
+    int y1 = imin(r1->y, r2->y);
+    int y2 = imax(r1->y + r1->height, r2->y + r2->height);
+
+    r1->x = x1;
+    r1->y = y1;
+    r1->width = x2 - x1;
+    r1->height = y2 - y1;
+
+    return self;
 }
