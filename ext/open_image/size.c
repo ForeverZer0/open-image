@@ -1,34 +1,36 @@
 
 #include "size.h"
 
-VALUE rb_cOpenImageSize;
+VALUE cSize;
 
 #define SIZE()  \
     Size *size; \
     Data_Get_Struct(self, Size, size)
 
-void Init_open_image_size(VALUE module) {
-    rb_cOpenImageSize = rb_define_class_under(module, "Size", rb_cObject);
+void Init_img_size(VALUE module) {
+    cSize = rb_define_class_under(module, "Size", rb_cObject);
+    rb_define_alloc_func(cSize, img_size_alloc);
+    rb_define_method(cSize, "initialize", img_size_initialize, -1);
 
-    rb_define_method(rb_cOpenImageSize, "width", open_image_size_get_width, 0);
-    rb_define_method(rb_cOpenImageSize, "height", open_image_size_get_height, 0);
-    rb_define_method(rb_cOpenImageSize, "width=", open_image_size_set_width, 1);
-    rb_define_method(rb_cOpenImageSize, "height=", open_image_size_set_height, 1);
+    rb_define_method(cSize, "width", img_size_get_width, 0);
+    rb_define_method(cSize, "height", img_size_get_height, 0);
+    rb_define_method(cSize, "width=", img_size_set_width, 1);
+    rb_define_method(cSize, "height=", img_size_set_height, 1);
 
-    rb_define_method(rb_cOpenImageSize, "to_a", open_image_size_to_a, 0);
-    rb_define_method(rb_cOpenImageSize, "to_h", open_image_size_to_h, 0);
-    rb_define_method(rb_cOpenImageSize, "to_s", open_image_size_to_s, 0);
-    rb_define_alias(rb_cOpenImageSize, "to_str", "to_s");
-    rb_define_method(rb_cOpenImageSize, "dup", open_image_size_dup, 0);
+    rb_define_method(cSize, "to_a", img_size_to_a, 0);
+    rb_define_method(cSize, "to_h", img_size_to_h, 0);
+    rb_define_method(cSize, "to_s", img_size_to_s, 0);
+    rb_define_alias(cSize, "to_str", "to_s");
+    rb_define_method(cSize, "dup", img_size_dup, 0);
 }
 
-VALUE open_image_size_alloc(VALUE klass) {
+VALUE img_size_alloc(VALUE klass) {
     Size *size = ALLOC(Size);
     memset(size, 0, sizeof(Size));
     RETURN_WRAP_STRUCT(klass, size);
 }
 
-VALUE open_image_size_initialize(int argc, VALUE *argv, VALUE self) {
+VALUE img_size_initialize(int argc, VALUE *argv, VALUE self) {
     SIZE();
     switch (argc) {
         case 0:
@@ -49,29 +51,29 @@ VALUE open_image_size_initialize(int argc, VALUE *argv, VALUE self) {
     return Qnil;
 }
 
-VALUE open_image_size_get_width(VALUE self) {
+VALUE img_size_get_width(VALUE self) {
     SIZE();
     return INT2NUM(size->width);
 }
 
-VALUE open_image_size_get_height(VALUE self) {
+VALUE img_size_get_height(VALUE self) {
     SIZE();
     return INT2NUM(size->height);
 }
 
-VALUE open_image_size_set_width(VALUE self, VALUE value) {
+VALUE img_size_set_width(VALUE self, VALUE value) {
     SIZE();
     size->width = NUM2INT(value);
     return value;
 }
 
-VALUE open_image_size_set_height(VALUE self, VALUE value) {
+VALUE img_size_set_height(VALUE self, VALUE value) {
     SIZE();
     size->height = NUM2INT(value);
     return value;
 }
 
-VALUE open_image_size_to_a(VALUE self) {
+VALUE img_size_to_a(VALUE self) {
     SIZE();
     VALUE ary = rb_ary_new_capa(2);
     rb_ary_store(ary, 0, INT2NUM(size->width));
@@ -79,7 +81,7 @@ VALUE open_image_size_to_a(VALUE self) {
     return ary;
 }
 
-VALUE open_image_size_to_h(VALUE self) {
+VALUE img_size_to_h(VALUE self) {
     SIZE();
     VALUE hash = rb_hash_new();
     rb_hash_aset(hash, STR2SYM("width"), INT2NUM(size->width));
@@ -87,12 +89,12 @@ VALUE open_image_size_to_h(VALUE self) {
     return hash;
 }
 
-VALUE open_image_size_to_s(VALUE self) {
+VALUE img_size_to_s(VALUE self) {
     SIZE();
     return rb_sprintf("<Size: width:%d, height:%d>", size->width, size->height);
 }
 
-VALUE open_image_size_dup(VALUE self) {
+VALUE img_size_dup(VALUE self) {
     struct RData *rdata = RDATA(self);
     Size *clone = ALLOC(Size);
     memcpy(clone, rdata->data, sizeof(Size));

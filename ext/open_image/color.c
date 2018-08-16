@@ -17,68 +17,66 @@
     RGB_FLOAT();     \
     float a = color->a / 255.0f
 
-VALUE rb_cOpenImageColor;
+VALUE cColor;
 
-void Init_open_image_color(VALUE module) {
-    rb_cOpenImageColor = rb_define_class_under(module, "Color", rb_cObject);
-    rb_define_alloc_func(rb_cOpenImageColor, open_image_color_alloc);
-    rb_define_method(rb_cOpenImageColor, "initialize", open_image_color_initialize, -1);
+void Init_img_color(VALUE module) {
+    cColor = rb_define_class_under(module, "Color", rb_cObject);
+    rb_define_alloc_func(cColor, img_color_alloc);
+    rb_define_method(cColor, "initialize", img_color_initialize, -1);
 
-    rb_define_singleton_method(rb_cOpenImageColor, "from_hsb", open_image_color_from_hsb, -1);
-    rb_define_singleton_method(rb_cOpenImageColor, "from_hsv", open_image_color_from_hsb, -1);
+    rb_define_singleton_method(cColor, "from_hsb", img_color_from_hsb, -1);
+    rb_define_singleton_method(cColor, "from_hsv", img_color_from_hsb, -1);
+    rb_define_singleton_method(cColor, "from_hsl", img_color_from_hsl, -1);
 
-    // rb_define_singleton_method(rb_cOpenImageColor, "from_hsl", open_image_color_from_hsl, -1);
+    rb_define_method(cColor, "r", img_color_get_r, 0);
+    rb_define_method(cColor, "g", img_color_get_g, 0);
+    rb_define_method(cColor, "b", img_color_get_b, 0);
+    rb_define_method(cColor, "a", img_color_get_a, 0);
 
-    rb_define_method(rb_cOpenImageColor, "r", open_image_color_get_r, 0);
-    rb_define_method(rb_cOpenImageColor, "g", open_image_color_get_g, 0);
-    rb_define_method(rb_cOpenImageColor, "b", open_image_color_get_b, 0);
-    rb_define_method(rb_cOpenImageColor, "a", open_image_color_get_a, 0);
+    rb_define_method(cColor, "red", img_color_getf_r, 0);
+    rb_define_method(cColor, "green", img_color_getf_g, 0);
+    rb_define_method(cColor, "blue", img_color_getf_b, 0);
+    rb_define_method(cColor, "alpha", img_color_getf_a, 0);
 
-    rb_define_method(rb_cOpenImageColor, "r=", open_image_color_set_r, 1);
-    rb_define_method(rb_cOpenImageColor, "g=", open_image_color_set_g, 1);
-    rb_define_method(rb_cOpenImageColor, "b=", open_image_color_set_b, 1);
-    rb_define_method(rb_cOpenImageColor, "a=", open_image_color_set_a, 1);
+    rb_define_method(cColor, "r=", img_color_set_r, 1);
+    rb_define_method(cColor, "g=", img_color_set_g, 1);
+    rb_define_method(cColor, "b=", img_color_set_b, 1);
+    rb_define_method(cColor, "a=", img_color_set_a, 1);
 
-    rb_define_alias(rb_cOpenImageColor, "red", "r");
-    rb_define_alias(rb_cOpenImageColor, "green", "g");
-    rb_define_alias(rb_cOpenImageColor, "blue", "b");
-    rb_define_alias(rb_cOpenImageColor, "alpha", "a");
+    rb_define_alias(cColor, "red=", "r=");
+    rb_define_alias(cColor, "green=", "g=");
+    rb_define_alias(cColor, "blue=", "b=");
+    rb_define_alias(cColor, "alpha=", "a=");
 
-    rb_define_alias(rb_cOpenImageColor, "red=", "r=");
-    rb_define_alias(rb_cOpenImageColor, "green=", "g=");
-    rb_define_alias(rb_cOpenImageColor, "blue=", "b=");
-    rb_define_alias(rb_cOpenImageColor, "alpha=", "a=");
+    rb_define_method(cColor, "to_a", img_color_to_a, 0);
+    rb_define_method(cColor, "to_h", img_color_to_h, 0);
+    rb_define_method(cColor, "to_s", img_color_to_s, 0);
+    rb_define_method(cColor, "to_i", img_color_to_i, 0);
+    rb_define_method(cColor, "gl", img_color_gl, 0);
+    rb_define_method(cColor, "hsl", img_color_hsl, 0);
+    rb_define_method(cColor, "hsb", img_color_hsb, 0);
+    rb_define_method(cColor, "html", img_color_html, 0);
 
-    rb_define_method(rb_cOpenImageColor, "to_a", open_image_color_to_a, 0);
-    rb_define_method(rb_cOpenImageColor, "to_h", open_image_color_to_h, 0);
-    rb_define_method(rb_cOpenImageColor, "to_s", open_image_color_to_s, 0);
-    rb_define_method(rb_cOpenImageColor, "to_i", open_image_color_to_i, 0);
-    rb_define_method(rb_cOpenImageColor, "gl", open_image_color_gl, 0);
+    rb_define_alias(cColor, "to_str", "to_s");
+    rb_define_alias(cColor, "to_int", "to_i");
 
-    rb_define_alias(rb_cOpenImageColor, "to_str", "to_s");
-    rb_define_alias(rb_cOpenImageColor, "to_int", "to_i");
+    rb_define_method(cColor, "hue", img_color_hue, 0);
+    rb_define_method(cColor, "saturation", img_color_saturation, 0);
+    rb_define_method(cColor, "lightness", img_color_lightness, 0);
+    rb_define_method(cColor, "brightness", img_color_brightness, 0);
+    rb_define_alias(cColor, "value", "brightness");
 
-    rb_define_method(rb_cOpenImageColor, "hue", open_image_color_hue, 0);
-    rb_define_method(rb_cOpenImageColor, "saturation", open_image_color_saturation, 0);
-    rb_define_method(rb_cOpenImageColor, "lightness", open_image_color_lightness, 0);
-    rb_define_method(rb_cOpenImageColor, "brightness", open_image_color_brightness, 0);
-
-    rb_define_method(rb_cOpenImageColor, "hsl", open_image_color_hsl, 0);
-    rb_define_method(rb_cOpenImageColor, "hsb", open_image_color_hsb, 0);
-
-    rb_define_alias(rb_cOpenImageColor, "value", "brightness");
-
-    rb_define_method(rb_cOpenImageColor, "lerp", open_image_color_lerp, 2);
-    rb_define_method(rb_cOpenImageColor, "lerp!", open_image_color_lerp_bang, 2);
+    rb_define_method(cColor, "lerp", img_color_lerp, 2);
+    rb_define_method(cColor, "lerp!", img_color_lerp_bang, 2);
 }
 
-VALUE open_image_color_alloc(VALUE klass) {
+VALUE img_color_alloc(VALUE klass) {
     Color *color = ALLOC(Color);
     memset(color, 0, sizeof(Color));
     return Data_Wrap_Struct(klass, NULL, RUBY_DEFAULT_FREE, color);
 }
 
-VALUE open_image_color_initialize(int argc, VALUE *argv, VALUE self) {
+VALUE img_color_initialize(int argc, VALUE *argv, VALUE self) {
     unsigned char *color = RDATA(self)->data;
     switch (argc) {
         case 0:  // None
@@ -100,7 +98,7 @@ VALUE open_image_color_initialize(int argc, VALUE *argv, VALUE self) {
             color[1] = (unsigned char)((argb & 0x0000ff00) >> 8);
             color[2] = (unsigned char)(argb & 0x000000ff);
 
-            // TODO: Test big-endian
+            // TODO: Test with different endianess
 
             break;
         }
@@ -118,50 +116,82 @@ VALUE open_image_color_initialize(int argc, VALUE *argv, VALUE self) {
     return Qnil;
 }
 
-VALUE open_image_color_get_r(VALUE self) {
+VALUE img_color_get_r(VALUE self) {
     COLOR();
     return INT2NUM(color->r);
 }
 
-VALUE open_image_color_get_g(VALUE self) {
+VALUE img_color_get_g(VALUE self) {
     COLOR();
     return INT2NUM(color->g);
 }
 
-VALUE open_image_color_get_b(VALUE self) {
+VALUE img_color_get_b(VALUE self) {
     COLOR();
     return INT2NUM(color->b);
 }
 
-VALUE open_image_color_get_a(VALUE self) {
+VALUE img_color_get_a(VALUE self) {
     COLOR();
     return INT2NUM(color->a);
 }
 
-VALUE open_image_color_set_r(VALUE self, VALUE value) {
+VALUE img_color_getf_r(VALUE self) {
     COLOR();
-    color->r = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+    return DBL2NUM(color->r / 255.0);
+}
+
+VALUE img_color_getf_g(VALUE self) {
+    COLOR();
+    return DBL2NUM(color->g / 255.0);
+}
+
+VALUE img_color_getf_b(VALUE self) {
+    COLOR();
+    return DBL2NUM(color->b / 255.0);
+}
+
+VALUE img_color_getf_a(VALUE self) {
+    COLOR();
+    return DBL2NUM(color->a / 255.0);
+}
+
+VALUE img_color_set_r(VALUE self, VALUE value) {
+    COLOR();
+    if (RB_FLOAT_TYPE_P(value))
+        color->r = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+    else
+        color->r = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
 
-VALUE open_image_color_set_g(VALUE self, VALUE value) {
+VALUE img_color_set_g(VALUE self, VALUE value) {
     COLOR();
-    color->g = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+    if (RB_FLOAT_TYPE_P(value))
+        color->g = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+    else
+        color->g = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
-VALUE open_image_color_set_b(VALUE self, VALUE value) {
+VALUE img_color_set_b(VALUE self, VALUE value) {
     COLOR();
-    color->b = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+    if (RB_FLOAT_TYPE_P(value))
+        color->b = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+    else
+        color->b = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
 
-VALUE open_image_color_set_a(VALUE self, VALUE value) {
+VALUE img_color_set_a(VALUE self, VALUE value) {
     COLOR();
-    color->a = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
+    if (RB_FLOAT_TYPE_P(value))
+        color->a = (unsigned char)roundf(CLAMP(NUM2FLT(value) * 255.0f, 0.0f, 255.0f));
+    else
+        color->a = (unsigned char)CLAMP(NUM2INT(value), 0, 255);
     return value;
 }
 
-VALUE open_image_color_to_a(VALUE self) {
+VALUE img_color_to_a(VALUE self) {
     COLOR();
     VALUE ary = rb_ary_new_capa(4);
     rb_ary_store(ary, 0, INT2NUM(color->r));
@@ -171,7 +201,7 @@ VALUE open_image_color_to_a(VALUE self) {
     return ary;
 }
 
-VALUE open_image_color_to_h(VALUE self) {
+VALUE img_color_to_h(VALUE self) {
     COLOR();
     VALUE hash = rb_hash_new();
     rb_hash_aset(hash, STR2SYM("red"), INT2NUM(color->r));
@@ -181,17 +211,17 @@ VALUE open_image_color_to_h(VALUE self) {
     return hash;
 }
 
-VALUE open_image_color_to_s(VALUE self) {
+VALUE img_color_to_s(VALUE self) {
     COLOR();
     return rb_sprintf("<Color: R:%d, G:%d, B:%d, A:%d>", color->r, color->g, color->b, color->a);
 }
 
-VALUE open_image_color_to_i(VALUE self) {
+VALUE img_color_to_i(VALUE self) {
     COLOR();
     return UINT2NUM((uint)(((color->a << 24) | (color->r << 16) | (color->g << 8) | color->b) & 0xFFFFFFFFu));
 }
 
-VALUE open_image_color_lerp(VALUE self, VALUE other, VALUE amount) {
+VALUE img_color_lerp(VALUE self, VALUE other, VALUE amount) {
     Color *c1, *c2, *result;
     Data_Get_Struct(self, Color, c1);
     Data_Get_Struct(other, Color, c2);
@@ -204,7 +234,7 @@ VALUE open_image_color_lerp(VALUE self, VALUE other, VALUE amount) {
     RETURN_WRAP_STRUCT(CLASS_OF(self), result);
 }
 
-VALUE open_image_color_lerp_bang(VALUE self, VALUE other, VALUE amount) {
+VALUE img_color_lerp_bang(VALUE self, VALUE other, VALUE amount) {
     Color *c1, *c2;
     Data_Get_Struct(self, Color, c1);
     Data_Get_Struct(other, Color, c2);
@@ -216,7 +246,7 @@ VALUE open_image_color_lerp_bang(VALUE self, VALUE other, VALUE amount) {
     return self;
 }
 
-VALUE open_image_color_gl(VALUE self) {
+VALUE img_color_gl(VALUE self) {
     COLOR();
     VALUE ary = rb_ary_new_capa(4);
     rb_ary_store(ary, 0, DBL2NUM(color->r / 255.0));
@@ -226,7 +256,7 @@ VALUE open_image_color_gl(VALUE self) {
     return ary;
 }
 
-VALUE open_image_color_hue(VALUE self) {
+VALUE img_color_hue(VALUE self) {
     RGB_FLOAT();
     if (color->r == color->g && color->g == color->b)
         return DBL2NUM(0.0);
@@ -250,7 +280,7 @@ VALUE open_image_color_hue(VALUE self) {
     return DBL2NUM(hue);
 }
 
-VALUE open_image_color_saturation(VALUE self) {
+VALUE img_color_saturation(VALUE self) {
     RGB_FLOAT();
     float max = MAX(r, MAX(g, b));
     float min = MIN(r, MIN(g, b));
@@ -263,20 +293,20 @@ VALUE open_image_color_saturation(VALUE self) {
     return DBL2NUM(s);
 }
 
-VALUE open_image_color_lightness(VALUE self) {
+VALUE img_color_lightness(VALUE self) {
     RGB_FLOAT();
     float max = MAX(r, MAX(g, b));
     float min = MIN(r, MIN(g, b));
     return DBL2NUM((max + min) * 0.5f);
 }
 
-VALUE open_image_color_brightness(VALUE self) {
+VALUE img_color_brightness(VALUE self) {
     RGB_FLOAT();
     float max = MAX(r, MAX(g, b));
     return DBL2NUM(max);
 }
 
-VALUE open_image_color_hsl(VALUE self) {
+VALUE img_color_hsl(VALUE self) {
     RGB_FLOAT();
     float max = MAX(r, MAX(g, b));
     float min = MIN(r, MIN(g, b));
@@ -304,7 +334,7 @@ VALUE open_image_color_hsl(VALUE self) {
     return hsl;
 }
 
-VALUE open_image_color_hsb(VALUE self) {
+VALUE img_color_hsb(VALUE self) {
     RGB_FLOAT();
     float max = MAX(r, MAX(g, b));
     float min = MIN(r, MIN(g, b));
@@ -330,7 +360,7 @@ VALUE open_image_color_hsb(VALUE self) {
     return hsv;
 }
 
-VALUE open_image_color_from_hsb(int argc, VALUE *argv, VALUE klass) {
+VALUE img_color_from_hsb(int argc, VALUE *argv, VALUE klass) {
     VALUE hue, saturation, brightness, alpha;
     rb_scan_args(argc, argv, "31", &hue, &saturation, &brightness, &alpha);
 
@@ -339,18 +369,36 @@ VALUE open_image_color_from_hsb(int argc, VALUE *argv, VALUE klass) {
     float b = CLAMP(NUM2FLT(brightness), 0.0f, 1.0f);
 
     Color *color = ALLOC(Color);
-    open_image_color_hsb2rgb(color, h, s, b);
+    img_color_hsb2rgb(color, h, s, b);
     color->a = (unsigned char)(NIL_P(alpha) ? 255 : CLAMP(NUM2INT(alpha), 0, 255));
     RETURN_WRAP_STRUCT(klass, color);
 }
 
+VALUE img_color_from_hsl(int argc, VALUE *argv, VALUE klass) {
+    VALUE hue, saturation, lightness, alpha;
+    rb_scan_args(argc, argv, "31", &hue, &saturation, &lightness, &alpha);
 
+    float h = CLAMP(NUM2FLT(hue), 0.0f, 360.0f);
+    float s = CLAMP(NUM2FLT(saturation), 0.0f, 1.0f);
+    float l = CLAMP(NUM2FLT(lightness), 0.0f, 1.0f);
+    float sat, b;
 
+    // Convert the saturation and lightness to be consistent with HSB/HSV, then compute
+    img_color_hsl2hsb(s, l, &sat, &b);
 
+    Color *color = ALLOC(Color);
+    img_color_hsb2rgb(color, h, sat, b);
+    color->a = (unsigned char)(NIL_P(alpha) ? 255 : CLAMP(NUM2INT(alpha), 0, 255));
+    RETURN_WRAP_STRUCT(klass, color);
+}
 
+static inline void img_color_hsl2hsb(float in_s, float in_l, float *out_s, float *out_b) {
+    float t = in_s * (in_l < 0.5f ? in_l : 1.0f - in_l);
+    *out_b = in_l + t;
+    *out_s = in_l> 0.0f ? 2.0f * t / *out_b : *out_s ;
+}
 
-
-static inline void open_image_color_hsb2rgb(Color *color, float hue, float saturation, float brightness) {
+static inline void img_color_hsb2rgb(Color *color, float hue, float saturation, float brightness) {
     float r, g, b;
 
     if (saturation < FLT_EPSILON) {
@@ -407,4 +455,9 @@ static inline void open_image_color_hsb2rgb(Color *color, float hue, float satur
     color->r = (unsigned char)roundf(r * 255.0f);
     color->g = (unsigned char)roundf(g * 255.0f);
     color->b = (unsigned char)roundf(b * 255.0f);
+}
+
+VALUE img_color_html(VALUE self) {
+    COLOR();
+    return rb_sprintf("#%2x%2x%2x", color->r, color->g, color->b);
 }

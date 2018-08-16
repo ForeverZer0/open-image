@@ -9,67 +9,67 @@
 #define COLOR_SIZE 4 /* For possible future expandment */
 #define COLOR_COMP 4 /* Number of color components */
 
-VALUE rb_cOpenImage;
-VALUE rb_cOpenImagePointer;
+VALUE cImage;
+VALUE cImagePointer;
 
-void Init_open_image_image(VALUE module) {
-    rb_cOpenImage = rb_define_class_under(module, "Image", rb_cObject);
+void Init_img_image(VALUE module) {
+    cImage = rb_define_class_under(module, "Image", rb_cObject);
 
-    rb_define_alloc_func(rb_cOpenImage, open_image_alloc);
-    rb_define_method(rb_cOpenImage, "initialize", open_image_initialize, -1);
-    rb_define_method(rb_cOpenImage, "dispose", open_image_dispose, 0);
-    rb_define_method(rb_cOpenImage, "disposed?", open_image_disposed_p, 0);
+    rb_define_alloc_func(cImage, img_image_alloc);
+    rb_define_method(cImage, "initialize", img_image_initialize, -1);
+    rb_define_method(cImage, "dispose", img_image_dispose, 0);
+    rb_define_method(cImage, "disposed?", img_image_disposed_p, 0);
 
-    rb_define_method(rb_cOpenImage, "width", open_image_width, 0);
-    rb_define_method(rb_cOpenImage, "height", open_image_height, 0);
-    rb_define_method(rb_cOpenImage, "pixels", open_image_pixels, 0);
-    rb_define_alias(rb_cOpenImage, "rows", "height");
-    rb_define_alias(rb_cOpenImage, "columns", "width");
-    rb_define_alias(rb_cOpenImage, "to_blob", "pixels");
-    rb_define_method(rb_cOpenImage, "dup", open_image_dup, 0);
+    rb_define_method(cImage, "width", img_image_width, 0);
+    rb_define_method(cImage, "height", img_image_height, 0);
+    rb_define_method(cImage, "pixels", img_image_pixels, 0);
+    rb_define_alias(cImage, "rows", "height");
+    rb_define_alias(cImage, "columns", "width");
+    rb_define_alias(cImage, "to_blob", "pixels");
+    rb_define_method(cImage, "dup", img_image_dup, 0);
 
-    rb_define_method(rb_cOpenImage, "ptr", open_image_ptr, 0);
-    rb_define_method(rb_cOpenImage, "size", open_image_size, 0);
-    rb_define_method(rb_cOpenImage, "rect", open_image_rect, 0);
-    rb_define_method(rb_cOpenImage, "to_s", open_image_to_s, 0);
-    rb_define_alias(rb_cOpenImage, "to_str", "to_s");
+    rb_define_method(cImage, "ptr", img_image_ptr, 0);
+    rb_define_method(cImage, "size", img_image_size, 0);
+    rb_define_method(cImage, "rect", img_image_rect, 0);
+    rb_define_method(cImage, "to_s", img_image_to_s, 0);
+    rb_define_alias(cImage, "to_str", "to_s");
 
-    rb_define_method(rb_cOpenImage, "save_png", open_image_save_png, 1);
-    rb_define_method(rb_cOpenImage, "save_jpg", open_image_save_jpg, -1);
-    rb_define_method(rb_cOpenImage, "save_bmp", open_image_save_bmp, 1);
-    rb_define_method(rb_cOpenImage, "save_tga", open_image_save_tga, 1);
+    rb_define_method(cImage, "save_png", img_image_save_png, 1);
+    rb_define_method(cImage, "save_jpg", img_image_save_jpg, -1);
+    rb_define_method(cImage, "save_bmp", img_image_save_bmp, 1);
+    rb_define_method(cImage, "save_tga", img_image_save_tga, 1);
 
-    rb_define_method(rb_cOpenImage, "get_pixel", open_image_get_pixel, -1);
-    rb_define_method(rb_cOpenImage, "set_pixel", open_image_set_pixel, -1);
-    rb_define_method(rb_cOpenImage, "fill_rect", open_image_fill_rect, -1);
-    rb_define_method(rb_cOpenImage, "subimage", open_image_subimage, -1);
+    rb_define_method(cImage, "get_pixel", img_image_get_pixel, -1);
+    rb_define_method(cImage, "set_pixel", img_image_set_pixel, -1);
+    rb_define_method(cImage, "fill_rect", img_image_fill_rect, -1);
+    rb_define_method(cImage, "subimage", img_image_subimage, -1);
 
-    rb_define_method(rb_cOpenImage, "split", open_image_split, 2);
+    rb_define_method(cImage, "split", img_image_split, 2);
 }
 
-static inline void open_image_free(void *data) {
+static inline void img_image_free(void *data) {
     Image *image = (Image *)data;
     xfree(image->pixels);
     xfree(image);
     image->pixels = NULL;
 }
 
-VALUE open_image_dispose(VALUE self) {
-    open_image_free(RDATA(self)->data);
+VALUE img_image_dispose(VALUE self) {
+    img_image_free(RDATA(self)->data);
 }
 
-VALUE open_image_disposed_p(VALUE self) {
+VALUE img_image_disposed_p(VALUE self) {
     IMAGE();
     return image->pixels ? Qfalse : Qtrue;
 }
 
-VALUE open_image_alloc(VALUE klass) {
+VALUE img_image_alloc(VALUE klass) {
     Image *image = ALLOC(Image);
     memset(image, 0, sizeof(Image));
-    return Data_Wrap_Struct(klass, NULL, open_image_free, image);
+    return Data_Wrap_Struct(klass, NULL, img_image_free, image);
 }
 
-VALUE open_image_initialize(int argc, VALUE *argv, VALUE self) {
+VALUE img_image_initialize(int argc, VALUE *argv, VALUE self) {
     IMAGE();
 
     VALUE arg1, arg2, options;
@@ -118,46 +118,46 @@ VALUE open_image_initialize(int argc, VALUE *argv, VALUE self) {
 
     if (rb_block_given_p()) {
         rb_yield(self);
-        open_image_free(image);
+        img_image_free(image);
     }
 
     return Qnil;
 }
 
-VALUE open_image_width(VALUE self) {
+VALUE img_image_width(VALUE self) {
     IMAGE();
     return UINT2NUM(image->width);
 }
 
-VALUE open_image_height(VALUE self) {
+VALUE img_image_height(VALUE self) {
     IMAGE();
     return UINT2NUM(image->height);
 }
 
-VALUE open_image_pixels(VALUE self) {
+VALUE img_image_pixels(VALUE self) {
     IMAGE();
     long size = (long)(image->width * image->height * COLOR_SIZE);
     return rb_str_new(image->pixels, size);
 }
 
-VALUE open_image_ptr(VALUE self) {
-    if (!rb_cOpenImagePointer) {
+VALUE img_image_ptr(VALUE self) {
+    if (!cImagePointer) {
         rb_require("fiddle");
         VALUE fiddle = rb_const_get(rb_cObject, rb_intern("Fiddle"));
-        rb_cOpenImagePointer = rb_const_get(fiddle, rb_intern("Pointer"));
+        cImagePointer = rb_const_get(fiddle, rb_intern("Pointer"));
     }
 
     IMAGE();
     VALUE *args = xmalloc(sizeof(VALUE) * 2);
     args[0] = LL2NUM((size_t)&image->pixels);
     args[1] = UINT2NUM(image->width * image->height * 4);
-    VALUE pointer = rb_obj_alloc(rb_cOpenImagePointer);
+    VALUE pointer = rb_obj_alloc(cImagePointer);
     rb_obj_call_init(pointer, 2, args);
     xfree(args);
     return pointer;
 }
 
-VALUE open_image_save_png(VALUE self, VALUE path) {
+VALUE img_image_save_png(VALUE self, VALUE path) {
     IMAGE();
     const char *filename = StringValueCStr(path);
     int stride = image->width * COLOR_SIZE;
@@ -165,7 +165,7 @@ VALUE open_image_save_png(VALUE self, VALUE path) {
     return result ? Qtrue : Qfalse;
 }
 
-VALUE open_image_save_jpg(int argc, VALUE *argv, VALUE self) {
+VALUE img_image_save_jpg(int argc, VALUE *argv, VALUE self) {
     IMAGE();
     VALUE path, quality;
     rb_scan_args(argc, argv, "11", &path, &quality);
@@ -177,21 +177,21 @@ VALUE open_image_save_jpg(int argc, VALUE *argv, VALUE self) {
     return result ? Qtrue : Qfalse;
 }
 
-VALUE open_image_save_tga(VALUE self, VALUE path) {
+VALUE img_image_save_tga(VALUE self, VALUE path) {
     IMAGE();
     const char *filename = StringValueCStr(path);
     int result = stbi_write_tga(filename, image->width, image->height, COLOR_COMP, image->pixels);
     return result ? Qtrue : Qfalse;
 }
 
-VALUE open_image_save_bmp(VALUE self, VALUE path) {
+VALUE img_image_save_bmp(VALUE self, VALUE path) {
     IMAGE();
     const char *filename = StringValueCStr(path);
     int result = stbi_write_bmp(filename, image->width, image->height, COLOR_COMP, image->pixels);
     return result ? Qtrue : Qfalse;
 }
 
-VALUE open_image_get_pixel(int argc, VALUE *argv, VALUE self) {
+VALUE img_image_get_pixel(int argc, VALUE *argv, VALUE self) {
     IMAGE();
     Color *color = ALLOC(Color);
     int x, y;
@@ -213,10 +213,10 @@ VALUE open_image_get_pixel(int argc, VALUE *argv, VALUE self) {
 
     int offset = (x + (y * image->width)) * COLOR_SIZE;
     memcpy(color, *(&image->pixels) + offset, COLOR_SIZE);
-    RETURN_WRAP_STRUCT(rb_cOpenImageColor, color);
+    RETURN_WRAP_STRUCT(cColor, color);
 }
 
-VALUE open_image_set_pixel(int argc, VALUE *argv, VALUE self) {
+VALUE img_image_set_pixel(int argc, VALUE *argv, VALUE self) {
     IMAGE();
     int x, y;
     Color *color;
@@ -244,7 +244,7 @@ VALUE open_image_set_pixel(int argc, VALUE *argv, VALUE self) {
     return self;
 }
 
-VALUE open_image_fill_rect(int argc, VALUE *argv, VALUE self) {
+VALUE img_image_fill_rect(int argc, VALUE *argv, VALUE self) {
     IMAGE();
     int t, l, r, b;
     Color *color;
@@ -266,7 +266,7 @@ VALUE open_image_fill_rect(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 2, 5)", argc);
 
     if (l >= r || t >= b)
-        rb_raise(rb_eOpenImageError, "invalid rectangle specified (%d, %d, %d, %d)", l, t, r - l, b - t);
+        rb_raise(eOpenImageError, "invalid rectangle specified (%d, %d, %d, %d)", l, t, r - l, b - t);
 
     int w = (r - l) * COLOR_SIZE;
     for (int y = t; y < b; y++) {
@@ -278,7 +278,7 @@ VALUE open_image_fill_rect(int argc, VALUE *argv, VALUE self) {
     return self;
 }
 
-VALUE open_image_subimage(int argc, VALUE *argv, VALUE self) {
+VALUE img_image_subimage(int argc, VALUE *argv, VALUE self) {
     IMAGE();
     int t, l, r, b;
     if (argc == 1) {
@@ -297,7 +297,7 @@ VALUE open_image_subimage(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 4)", argc);
 
     if (l >= r || t >= b)
-        rb_raise(rb_eOpenImageError, "invalid rectangle specified (%d, %d, %d, %d)", l, t, r - l, b - t);
+        rb_raise(eOpenImageError, "invalid rectangle specified (%d, %d, %d, %d)", l, t, r - l, b - t);
 
     unsigned char *dst = xmalloc((r - l) * (b - t) * COLOR_SIZE);
     unsigned char *src = *(&image->pixels);
@@ -313,27 +313,27 @@ VALUE open_image_subimage(int argc, VALUE *argv, VALUE self) {
     sub->width = r - l;
     sub->height = b - t;
     sub->pixels = dst;
-    return Data_Wrap_Struct(CLASS_OF(self), NULL, open_image_free, sub);
+    return Data_Wrap_Struct(CLASS_OF(self), NULL, img_image_free, sub);
 }
 
-VALUE open_image_split(VALUE self, VALUE rows, VALUE columns) {
+VALUE img_image_split(VALUE self, VALUE rows, VALUE columns) {
     int r = NUM2INT(rows);
     int c = NUM2INT(columns);
 
     if (r < 1)
-        rb_raise(rb_eOpenImageError, "row count must be greater than 0 (given %d)", r);
+        rb_raise(eOpenImageError, "row count must be greater than 0 (given %d)", r);
     if (c < 1)
-        rb_raise(rb_eOpenImageError, "column count must be greater than 0 (given %d)", c);
+        rb_raise(eOpenImageError, "column count must be greater than 0 (given %d)", c);
 
     if (r == 1 && c == 1)
         return rb_Array(self);
 
     IMAGE();
     if (image->width % c != 0)
-        rb_raise(rb_eOpenImageError, "specified number of columns (%d) must be evenly divisible by image width (%u)", c, image->width);
+        rb_raise(eOpenImageError, "specified number of columns (%d) must be evenly divisible by image width (%u)", c, image->width);
 
     if (image->height % r != 0)
-        rb_raise(rb_eOpenImageError, "specified number of rows (%d) must be evenly divisible by image height (%u)", r, image->height);
+        rb_raise(eOpenImageError, "specified number of rows (%d) must be evenly divisible by image height (%u)", r, image->height);
 
     uint w = image->width / c;
     uint h = image->height / r;
@@ -357,35 +357,35 @@ VALUE open_image_split(VALUE self, VALUE rows, VALUE columns) {
         sub->width = w;
         sub->height = h;
         sub->pixels = dst;
-        rb_ary_store(ary, i, Data_Wrap_Struct(klass, NULL, open_image_free, sub));
+        rb_ary_store(ary, i, Data_Wrap_Struct(klass, NULL, img_image_free, sub));
     }
     return ary;
 }
 
-VALUE open_image_size(VALUE self) {
+VALUE img_image_size(VALUE self) {
     IMAGE();
     Size *size = ALLOC(Size);
     size->width = image->width;
     size->height = image->height;
-    RETURN_WRAP_STRUCT(rb_cOpenImageSize, size);
+    RETURN_WRAP_STRUCT(cSize, size);
 }
 
-VALUE open_image_rect(VALUE self) {
+VALUE img_image_rect(VALUE self) {
     IMAGE();
     Rect *rect = ALLOC(Rect);
     rect->x = 0;
     rect->y = 0;
     rect->width = image->width;
     rect->height = image->height;
-    RETURN_WRAP_STRUCT(rb_cOpenImageRect, rect);
+    RETURN_WRAP_STRUCT(cRect, rect);
 }
 
-VALUE open_image_to_s(VALUE self) {
+VALUE img_image_to_s(VALUE self) {
     IMAGE();
     return rb_sprintf("<Image: width:%u, height:%u>", image->width, image->height);
 }
 
-VALUE open_image_dup(VALUE self) {
+VALUE img_image_dup(VALUE self) {
     IMAGE();
     Image *clone = ALLOC(Image);
     memcpy(clone, image, sizeof(uint) * 2);
@@ -394,5 +394,5 @@ VALUE open_image_dup(VALUE self) {
     clone->pixels = xmalloc(size);
     memcpy(*(&clone->pixels), *(&image->pixels), size);
 
-    return Data_Wrap_Struct(CLASS_OF(self), NULL, open_image_free, clone);
+    return Data_Wrap_Struct(CLASS_OF(self), NULL, img_image_free, clone);
 }

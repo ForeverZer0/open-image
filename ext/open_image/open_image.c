@@ -1,16 +1,16 @@
 #include "open_image.h"
 
-VALUE rb_mOpenImage;
-VALUE rb_cOpenImage;
-VALUE rb_eOpenImageError;
+VALUE mOpenImage;
+VALUE cImage;
+VALUE eOpenImageError;
 
 void Init_open_image(void) {
-    rb_mOpenImage = rb_define_module("OpenImage");
-    rb_eOpenImageError = rb_define_class_under(rb_mOpenImage, "Error", rb_eStandardError);
+    mOpenImage = rb_define_module("OpenImage");
+    eOpenImageError = rb_define_class_under(mOpenImage, "Error", rb_eStandardError);
 
-    Init_open_image_point(rb_mOpenImage);
-    Init_open_image_size(rb_mOpenImage);
-    Init_open_image_rect(rb_mOpenImage);
-    Init_open_image_color(rb_mOpenImage);
-    Init_open_image_image(rb_mOpenImage);
+    Init_img_point(mOpenImage);
+    Init_img_size(mOpenImage);
+    Init_img_rect(mOpenImage);
+    Init_img_color(mOpenImage);
+    Init_img_image(mOpenImage);
 }

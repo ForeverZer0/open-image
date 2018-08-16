@@ -16,3 +16,8 @@ Rake::ExtensionTask.new('open_image') do |ext|
 end
 
 task :default => [:clobber, :compile, :test]
+
+task :doc do
+  `yardoc`
+  `yard server --reload`
+end

@@ -66,12 +66,12 @@ typedef struct Color {
     unsigned char a;
 } Color;
 
-extern VALUE rb_mOpenImage;
-extern VALUE rb_eOpenImageError;
-extern VALUE rb_cOpenImage;
-extern VALUE rb_cOpenImageColor;
-extern VALUE rb_cOpenImagePoint;
-extern VALUE rb_cOpenImageSize;
-extern VALUE rb_cOpenImageRect;
+extern VALUE mOpenImage;
+extern VALUE eOpenImageError;
+extern VALUE cImage;
+extern VALUE cColor;
+extern VALUE cPoint;
+extern VALUE cSize;
+extern VALUE cRect;
 
 #endif /* RB_OPEN_IMAGE_COMMON_H */

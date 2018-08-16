@@ -14,16 +14,11 @@ module OpenImage
 
   # exit
 
-  color = Colors.alice_blue
+  color = Colors.red
 
-  puts color 
-  hsb = color.hsb
+  p [color.r, color.g, color.b, color.a] 
+  p [color.red, color.green, color.blue, color.alpha] 
 
-  p hsb
-
-  c = Color.from_hsb(*hsb)
-
-  puts c
 
   # count = 1_000_000
 

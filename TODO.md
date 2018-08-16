@@ -11,7 +11,7 @@ ___
 
 ## Color
 
-* `gl` (floats between 0.0f and 1.0f)
+* `lightness=`
 * `hue=`
 * `saturation=`
 * `brightness=`
@@ -35,6 +35,7 @@ ___
 
 ## Rect
 
+* `from_ltrb`
 * `inflate`
 * `inflate!`
 * `offset(point)`
