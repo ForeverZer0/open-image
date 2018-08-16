@@ -28,11 +28,6 @@ ___
 
 ## Rect
 
-* `include?(x, y)`
-* `include?(point)`
-* `include?(rect)`
-* `alias include?, contains?`
-
 ___
 
 ## Image

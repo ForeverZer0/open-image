@@ -44,4 +44,6 @@ VALUE img_rect_intersects_p(VALUE self, VALUE other);
 VALUE img_rect_union(VALUE self, VALUE other);
 VALUE img_rect_union_bang(VALUE self, VALUE other);
 
+VALUE img_rect_include_p(int argc, VALUE *argv, VALUE self);
+
 #endif /* OPEN_IMAGE_RECT_H */

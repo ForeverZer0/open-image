@@ -53,6 +53,8 @@ void Init_img_rect(VALUE module) {
     rb_define_method(cRect, "intersects?", img_rect_intersects_p, 1);
     rb_define_method(cRect, "union", img_rect_union, 1);
     rb_define_method(cRect, "union!", img_rect_union_bang, 1);
+    rb_define_method(cRect, "include?", img_rect_include_p, -1);
+    rb_define_alias(cRect, "contains?", "include?");
 }
 
 VALUE img_rect_alloc(VALUE klass) {
@@ -425,4 +427,33 @@ VALUE img_rect_union_bang(VALUE self, VALUE other) {
     r1->height = y2 - y1;
 
     return self;
+}
+
+VALUE img_rect_include_p(int argc, VALUE *argv, VALUE self) {
+    RECT();
+    int result;
+    if (argc == 1) {
+        if (rb_obj_is_kind_of(argv[0], cPoint)) {
+            Point *p;
+            Data_Get_Struct(argv[0], Point, p);
+            result = (p->x >= rect->x && (p->x < rect->x + rect->width)) &&
+                     (p->y >= rect->y && (p->y < rect->y + rect->height));
+        } else if (rb_obj_is_kind_of(argv[0], cRect)) {
+            Rect *r;
+            Data_Get_Struct(argv[0], Rect, r);
+            result = r->x >= rect->x &&
+                     r->y >= rect->y &&
+                     (r->x + r->width) <= (rect->x + rect->width) &&
+                     (r->y + r->height) <= (rect->y + rect->height);
+        } else
+            rb_raise(rb_eTypeError, "%s is not a Point or Rect", rb_class2name(CLASS_OF(argv[0])));
+    } else if (argc == 2) {
+        int x = NUM2INT(argv[0]);
+        int y = NUM2INT(argv[1]);
+        result = (x >= rect->x && (x < rect->x + rect->width)) &&
+                 (y >= rect->y && (y < rect->y + rect->height));
+    } else
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 2)", argc);
+
+    return result ? Qtrue : Qfalse;
 }

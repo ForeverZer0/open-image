@@ -393,7 +393,7 @@ VALUE img_color_from_hsl(int argc, VALUE *argv, VALUE klass) {
 static inline void img_color_hsl2hsb(float in_s, float in_l, float *out_s, float *out_b) {
     float t = in_s * (in_l < 0.5f ? in_l : 1.0f - in_l);
     *out_b = in_l + t;
-    *out_s = in_l> 0.0f ? 2.0f * t / *out_b : *out_s ;
+    *out_s = in_l > 0.0f ? 2.0f * t / *out_b : *out_s;
 }
 
 static inline void img_color_hsb2rgb(Color *color, float hue, float saturation, float brightness) {
