@@ -13,3 +13,4 @@
 mkmf.log
 /.idea/
 /.vscode/
+*.cs

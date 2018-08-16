@@ -11,10 +11,10 @@ ___
 
 ## Color
 
-* `lightness=`
-* `hue=`
-* `saturation=`
-* `brightness=` (alias `value=`)
+* ~~`lightness=`~~ 
+* ~~`hue=`~~
+* ~~`saturation=`~~ (Saturation is different algorithm depending if HSV/HSB or HSL...)
+* ~~`brightness=` (alias `value=`)~~
 
 ___
 
@@ -42,7 +42,8 @@ ___
 * `adjust_tone(r, g, b)`
 * `grayscale(amount)`
 * `balance(r, g, b)`
-* `to_texture` (?)(maybe in gem extending this one?)
+* `tone(r, g, b)`
+* `to_texture` (maybe in gem extending this one?)
 
 ## Gosu / OpenGL
 

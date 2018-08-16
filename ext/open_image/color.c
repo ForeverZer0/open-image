@@ -111,6 +111,9 @@ VALUE img_color_initialize(int argc, VALUE *argv, VALUE self) {
             break;
         }
     }
+
+
+
     return Qnil;
 }
 

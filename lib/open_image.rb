@@ -7,10 +7,16 @@ require 'benchmark'
 
 module OpenImage
 
-  # path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
-  # img = Image.new(path)
+  path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
+  img = Image.new(path)
 
-  # exit
+  out = 'C:/Users/Eric/Desktop/OUTPUT/gray.png'
+
+  img.sepia
+  
+  img.save_png(out)
+
+  exit
 
   color = Colors.red
 

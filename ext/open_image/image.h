@@ -33,4 +33,7 @@ VALUE img_image_rect(VALUE self);
 VALUE img_image_to_s(VALUE self);
 VALUE img_image_dup(VALUE self);
 
+VALUE img_image_grayscale(VALUE self, VALUE amount);
+VALUE img_image_sepia(VALUE self);
+
 #endif /* RB_OPEN_IMAGE_IMAGE_H */

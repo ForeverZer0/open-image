@@ -44,6 +44,9 @@ void Init_img_image(VALUE module) {
     rb_define_method(cImage, "subimage", img_image_subimage, -1);
 
     rb_define_method(cImage, "split", img_image_split, 2);
+
+    rb_define_method(cImage, "apply_grayscale", img_image_grayscale, 1);
+    rb_define_method(cImage, "sepia", img_image_sepia, 0);
 }
 
 static inline void img_image_free(void *data) {
@@ -392,4 +395,40 @@ VALUE img_image_ptr(VALUE self) {
 #else
     return LL2NUM((size_t)&image->pixels);
 #endif
+}
+
+VALUE img_image_grayscale(VALUE self, VALUE amount) {
+    float gray = fclamp((RB_FLOAT_TYPE_P(amount) ? NUM2FLT(amount) : NUM2INT(amount) / 255.0f), 0.0f, 1.0f);
+    IMAGE();
+    int count = image->width * image->height;
+    Color *pixels = (Color*) image->pixels;
+    float r, g, b;
+    for (int i = 0; i < count; i++)
+    {
+        r = pixels[i].r / 255.0f;
+        g = pixels[i].g / 255.0f;
+        b = pixels[i].b / 255.0f;
+        float mean = (r + g + b) / 3.0f;
+        pixels[i].r = (unsigned char) ((r - ((r - mean) * gray)) * 255.0f);
+        pixels[i].g = (unsigned char) ((g - ((g - mean) * gray)) * 255.0f);
+        pixels[i].b = (unsigned char) ((b - ((b - mean) * gray)) * 255.0f);
+    }
+    return self;
+}
+
+VALUE img_image_sepia(VALUE self) {
+    IMAGE();
+    int count = image->width * image->height * COLOR_SIZE;
+    unsigned char *bytes =  *(&image->pixels);
+    unsigned char r, g, b;
+    for (int i = 0; i < count; i += COLOR_SIZE)
+    {
+        r = fmin(bytes[i] * 0.189f + bytes[i + 1] * 0.769f + bytes[i + 2] * 0.393f, 255.0f);
+        g = fmin(bytes[i] * 0.168f + bytes[i + 1] * 0.686f + bytes[i + 2] * 0.349f, 255.0f);
+        b = fmin(bytes[i] * 0.131f + bytes[i + 1] * 0.534f + bytes[i + 2] * 0.272f, 255.0f);
+        bytes[i] = (unsigned char) r;
+        bytes[i + 1] = (unsigned char) g;
+        bytes[i + 2] = (unsigned char) b;
+    }
+    return self;
 }
