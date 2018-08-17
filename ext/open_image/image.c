@@ -106,6 +106,21 @@ void Init_img_image(VALUE module) {
     rb_define_method(cImage, "gaussian_blur!", img_image_gaussian_bang, 0);
 #endif
 
+#if OPEN_IMAGE_SHARPEN
+    rb_define_method(cImage, "sharpen", img_image_sharpen, 0);
+    rb_define_method(cImage, "sharpen!", img_image_sharpen_bang, 0);
+#endif
+
+#if OPEN_IMAGE_EDGE_DETECT
+    rb_define_method(cImage, "edge_detect", img_image_edge_detect, 0);
+    rb_define_method(cImage, "edge_detect!", img_image_edge_detect_bang, 0);
+#endif
+
+#if OPEN_IMAGE_EMBOSS
+    rb_define_method(cImage, "emboss", img_image_emboss, 0);
+    rb_define_method(cImage, "emboss!", img_image_emboss_bang, 0);
+#endif
+
 #endif /* OPEN_IMAGE_CONVOLUTION_FILTER */
 }
 
@@ -834,6 +849,75 @@ static inline void img_image_gaussian_s(Image *image) {
                         4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f,
                         1.0f / 273.0f, 4.0f / 273.0f, 7.0f / 273.0f, 4.0f / 273.0f, 1.0f / 273.0f};
     img_image_convolution_filter_s(image, kernel, 7, 7);
+}
+
+#endif
+
+#if OPEN_IMAGE_SHARPEN
+
+VALUE img_image_sharpen(VALUE self) {
+    IMAGE_DUP();
+    img_image_sharpen_s(dup);
+    RETURN_DUP_IMAGE();
+}
+
+VALUE img_image_sharpen_bang(VALUE self) {
+    IMAGE();
+    img_image_sharpen_s(image);
+    return self;
+}
+
+static inline void img_image_sharpen_s(Image *image) {
+    float kernel[9] = {-1.0f, -1.0f, -1.0f,
+                       -1.0f,  9.0f, -1.0f,
+                       -1.0f, -1.0f, -1.0f};
+    img_image_convolution_filter_s(image, kernel, 3, 3);
+}
+
+#endif
+
+#if OPEN_IMAGE_EDGE_DETECT
+
+VALUE img_image_edge_detect(VALUE self) {
+    IMAGE_DUP();
+    img_image_edge_detect_s(dup);
+    RETURN_DUP_IMAGE();
+}
+
+VALUE img_image_edge_detect_bang(VALUE self) {
+    IMAGE();
+    img_image_edge_detect_s(image);
+    return self;
+}
+
+static inline void img_image_edge_detect_s(Image *image) {
+    float kernel[9] = {-1.0f, -1.0f, -1.0f,
+                       -1.0f,  8.0f, -1.0f,
+                       -1.0f, -1.0f, -1.0f};
+    img_image_convolution_filter_s(image, kernel, 3, 3);
+}
+
+#endif
+
+#if OPEN_IMAGE_EMBOSS
+
+VALUE img_image_emboss(VALUE self) {
+    IMAGE_DUP();
+    img_image_emboss_s(dup);
+    RETURN_DUP_IMAGE();
+}
+
+VALUE img_image_emboss_bang(VALUE self) {
+    IMAGE();
+    img_image_emboss_s(image);
+    return self;
+}
+
+static inline void img_image_emboss_s(Image *image) {
+    float kernel[9] = { 2.0f,  0.0f,  0.0f,
+                        0.0f, -1.0f,  0.0f,
+                        0.0f,  0.0f, -1.0f};
+    img_image_convolution_filter_s(image, kernel, 3, 3);
 }
 
 #endif

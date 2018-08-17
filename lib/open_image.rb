@@ -17,8 +17,14 @@ module OpenImage
   path = 'C:/Users/Eric/Desktop/test.jpg'
   img = Image.new(path)
 
-  out = "C:/Users/Eric/Desktop/OUTPUT/gaussian2.png"
-  img.gaussian_blur.save_png out
+  out = "C:/Users/Eric/Desktop/OUTPUT/edge_detect.png"
+  img.edge_detect.save_png out
+
+  out = "C:/Users/Eric/Desktop/OUTPUT/emboss.png"
+  img.emboss.save_png out
+
+  out = "C:/Users/Eric/Desktop/OUTPUT/sharpen.png"
+  img.sharpen.save_png out
 
   exit
   

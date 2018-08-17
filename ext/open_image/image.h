@@ -94,20 +94,22 @@ VALUE img_image_gaussian_bang(VALUE self);
 static inline void img_image_gaussian_s(Image *image);
 #endif
 
+#if OPEN_IMAGE_SHARPEN
+VALUE img_image_sharpen(VALUE self);
+VALUE img_image_sharpen_bang(VALUE self);
+static inline void img_image_sharpen_s(Image *image);
+#endif
 
-#if OPEN_IMAGE_EMBOSS
+#if OPEN_IMAGE_EDGE_DETECT
 VALUE img_image_edge_detect(VALUE self);
 VALUE img_image_edge_detect_bang(VALUE self);
+static inline void img_image_edge_detect_s(Image *image);
 #endif
 
 #if OPEN_IMAGE_EMBOSS
 VALUE img_image_emboss(VALUE self);
 VALUE img_image_emboss_bang(VALUE self);
-#endif
-
-#if OPEN_IMAGE_GAUSSIAN_BLUR
-VALUE img_image_gaussian_blur(VALUE self);
-VALUE img_image_gaussian_blur_bang(VALUE self);
+static inline void img_image_emboss_s(Image *image);
 #endif
 
 #endif /* OPEN_IMAGE_CONVOLUTION_FILTER */
