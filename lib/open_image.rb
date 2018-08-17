@@ -8,13 +8,14 @@ require 'benchmark'
 module OpenImage
 
 
-  path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
+  # path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
+  path = 'C:/Users/Eric/Desktop/test.jpg'
   img = Image.new(path)
 
-  # out = "C:/Users/Eric/Desktop/OUTPUT/posterize.png"
-  # img.solarize(16, 16, 8).save_png(out)
+  out = "C:/Users/Eric/Desktop/OUTPUT/balance.png"
+  img.balance(147, 150, 127).save_png(out)
 
-  # exit
+  exit
 
   [-1.0, -0.5, 0.0, 0.5, 1.0].each do |i|
 

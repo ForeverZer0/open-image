@@ -85,6 +85,11 @@ void Init_img_image(VALUE module) {
     rb_define_method(cImage, "contrast", img_image_contrast, 1);
     rb_define_method(cImage, "contrast!", img_image_contrast_bang, 1);
 #endif
+
+#if OPEN_IMAGE_COLOR_BALANCE
+    rb_define_method(cImage, "balance", img_image_balance, 3);
+    rb_define_method(cImage, "balance!", img_image_balance_bang, 3);
+#endif
 }
 
 static inline void img_image_free(void *data) {
@@ -664,7 +669,37 @@ static void img_image_contrast_s(Image *image, VALUE contrast) {
 
 #endif
 
+#if OPEN_IMAGE_COLOR_BALANCE
 
+VALUE img_image_balance(VALUE self, VALUE red, VALUE green, VALUE blue) {
+    IMAGE_DUP();
+    img_image_balance_s(dup, red, green, blue);
+    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+}
+
+VALUE img_image_balance_bang(VALUE self, VALUE red, VALUE green, VALUE blue) {
+    IMAGE();
+    img_image_balance_s(image, red, green, blue);
+    return self;
+}
+
+static void img_image_balance_s(Image *image, VALUE red, VALUE green, VALUE blue) {
+
+    float r = fclamp(RB_FLOAT_TYPE_P(red) ? NUM2FLT(red) * 255.0f : (NUM2INT(red)), 0.0f, 255.0f);
+    float g = fclamp(RB_FLOAT_TYPE_P(green) ? NUM2FLT(green) * 255.0f : (NUM2INT(green)), 0.0f, 255.0f);
+    float b = fclamp(RB_FLOAT_TYPE_P(blue) ? NUM2FLT(blue) * 255.0f: (NUM2INT(blue)), 0.0f, 255.0f);
+
+    Color *p = (Color*) image->pixels;
+    int count = image->width * image->height;
+    for (int i = 0; i < count; i++)
+    {
+        p[i].r = (unsigned char) fclamp(255.0f / r * p[i].r, 0.0f, 255.0f);
+        p[i].g = (unsigned char) fclamp(255.0f / g * p[i].g, 0.0f, 255.0f);
+        p[i].b = (unsigned char) fclamp(255.0f / b * p[i].b, 0.0f, 255.0f);
+    }
+}
+
+#endif
 
 
 

@@ -10,7 +10,7 @@
 #define OPEN_IMAGE_GRAYSCALE 0
 #define OPEN_IMAGE_SOLARIZE 0
 #define OPEN_IMAGE_CONTRAST 0
-
+#define OPEN_IMAGE_COLOR_BALANCE 0
 
 void img_imgage_matrix_filter_p(Image *image, double *matrix, int rows, int columns, double factor, int bias, int grayscale);
 
@@ -77,6 +77,12 @@ static void img_image_solarize_s(Image *image, VALUE red, VALUE green, VALUE blu
 VALUE img_image_contrast(VALUE self, VALUE contrast);
 VALUE img_image_contrast_bang(VALUE self, VALUE contrast);
 static void img_image_contrast_s(Image *image, VALUE contrast);
+#endif
+
+#if OPEN_IMAGE_COLOR_BALANCE
+VALUE img_image_balance(VALUE self, VALUE red, VALUE green, VALUE blue);
+VALUE img_image_balance_bang(VALUE self, VALUE red, VALUE green, VALUE blue);
+static void img_image_balance_s(Image *image, VALUE red, VALUE green, VALUE blue);
 #endif
 
 #endif /* RB_OPEN_IMAGE_IMAGE_H */
