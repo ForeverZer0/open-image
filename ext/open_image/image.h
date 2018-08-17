@@ -4,7 +4,6 @@
 
 #include "common.h"
 
-
 void Init_img_image(VALUE module);
 static inline void img_image_free(void *data);
 VALUE img_image_alloc(VALUE klass);
@@ -82,13 +81,13 @@ VALUE img_image_convolution_filter(VALUE self, VALUE matrix);
 VALUE img_image_convolution_filter_bang(VALUE self, VALUE matrix);
 static inline void img_image_convolution_filter_s(Image *image, float *kernel, int kw, int kh);
 
-#if OPEN_IMAGE_BOX_BLUR 
+#if OPEN_IMAGE_BOX_BLUR
 VALUE img_image_box_blur(VALUE self);
 VALUE img_image_box_blur_bang(VALUE self);
 static inline void img_image_box_blur_s(Image *image);
 #endif
 
-#if OPEN_IMAGE_GAUSSIAN_BLUR 
+#if OPEN_IMAGE_GAUSSIAN_BLUR
 VALUE img_image_gaussian(VALUE self);
 VALUE img_image_gaussian_bang(VALUE self);
 static inline void img_image_gaussian_s(Image *image);
@@ -110,6 +109,24 @@ static inline void img_image_edge_detect_s(Image *image);
 VALUE img_image_emboss(VALUE self);
 VALUE img_image_emboss_bang(VALUE self);
 static inline void img_image_emboss_s(Image *image);
+#endif
+
+#if OPEN_IMAGE_BRIGHTEN
+VALUE img_image_brighten(VALUE self, VALUE level);
+VALUE img_image_brighten_bang(VALUE self, VALUE level);
+static inline void img_image_brighten_s(Image *image, VALUE level);
+#endif
+
+#if OPEN_IMAGE_BLUR
+VALUE img_image_blur(VALUE self);
+VALUE img_image_blur_bang(VALUE self);
+static inline void img_image_blur_s(Image *image);
+#endif
+
+#if OPEN_IMAGE_LINE_DETECT
+VALUE img_image_line_detect(VALUE self, VALUE direction);
+VALUE img_image_line_detect_bang(VALUE self, VALUE direction);
+static inline void img_image_line_detect_s(Image *image, VALUE direction);
 #endif
 
 #endif /* OPEN_IMAGE_CONVOLUTION_FILTER */

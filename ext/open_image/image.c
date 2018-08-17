@@ -121,6 +121,21 @@ void Init_img_image(VALUE module) {
     rb_define_method(cImage, "emboss!", img_image_emboss_bang, 0);
 #endif
 
+#if OPEN_IMAGE_BRIGHTEN
+    rb_define_method(cImage, "brighten", img_image_brighten, 1);
+    rb_define_method(cImage, "brighten!", img_image_brighten_bang, 1);
+#endif
+
+#if OPEN_IMAGE_BLUR
+    rb_define_method(cImage, "blur", img_image_blur, 0);
+    rb_define_method(cImage, "blur!", img_image_blur_bang, 0);
+#endif
+
+#if OPEN_IMAGE_LINE_DETECT
+    rb_define_method(cImage, "line_detect", img_image_line_detect, 1);
+    rb_define_method(cImage, "line_detect!", img_image_line_detect_bang, 1);
+#endif
+
 #endif /* OPEN_IMAGE_CONVOLUTION_FILTER */
 }
 
@@ -869,7 +884,7 @@ VALUE img_image_sharpen_bang(VALUE self) {
 
 static inline void img_image_sharpen_s(Image *image) {
     float kernel[9] = {-1.0f, -1.0f, -1.0f,
-                       -1.0f,  9.0f, -1.0f,
+                       -1.0f, 9.0f, -1.0f,
                        -1.0f, -1.0f, -1.0f};
     img_image_convolution_filter_s(image, kernel, 3, 3);
 }
@@ -892,7 +907,7 @@ VALUE img_image_edge_detect_bang(VALUE self) {
 
 static inline void img_image_edge_detect_s(Image *image) {
     float kernel[9] = {-1.0f, -1.0f, -1.0f,
-                       -1.0f,  8.0f, -1.0f,
+                       -1.0f, 8.0f, -1.0f,
                        -1.0f, -1.0f, -1.0f};
     img_image_convolution_filter_s(image, kernel, 3, 3);
 }
@@ -914,10 +929,134 @@ VALUE img_image_emboss_bang(VALUE self) {
 }
 
 static inline void img_image_emboss_s(Image *image) {
-    float kernel[9] = { 2.0f,  0.0f,  0.0f,
-                        0.0f, -1.0f,  0.0f,
-                        0.0f,  0.0f, -1.0f};
+    float kernel[9] = {2.0f, 0.0f, 0.0f,
+                       0.0f, -1.0f, 0.0f,
+                       0.0f, 0.0f, -1.0f};
     img_image_convolution_filter_s(image, kernel, 3, 3);
+}
+
+#endif
+
+#if OPEN_IMAGE_BRIGHTEN
+
+VALUE img_image_brighten(VALUE self, VALUE level) {
+    IMAGE_DUP();
+    img_image_brighten_s(dup, level);
+    RETURN_DUP_IMAGE();
+}
+
+VALUE img_image_brighten_bang(VALUE self, VALUE level) {
+    IMAGE();
+    img_image_brighten_s(image, level);
+    return self;
+}
+
+static inline void img_image_brighten_s(Image *image, VALUE level) {
+    float lvl = fclamp(NUM2FLT(level), 0.0f, 5.0f);
+    float kernel[9] = {0.0f, 0.0f, 0.0f,
+                       0.0f, lvl, 0.0f,
+                       0.0f, 0.0f, 0.0f};
+    img_image_convolution_filter_s(image, kernel, 3, 3);
+}
+
+#endif
+
+#if OPEN_IMAGE_BLUR
+
+VALUE img_image_blur(VALUE self) {
+    IMAGE_DUP();
+    img_image_blur_s(dup);
+    RETURN_DUP_IMAGE();
+}
+
+VALUE img_image_blur_bang(VALUE self) {
+    IMAGE();
+    img_image_blur_s(image);
+    return self;
+}
+
+static inline void img_image_blur_s(Image *image) {
+    float kernel[49];
+    for (int i = 0; i < 49; i++)
+        kernel[i] = 1.0f / 49.0f;
+    img_image_convolution_filter_s(image, kernel, 7, 7);
+}
+
+#endif
+
+#if OPEN_IMAGE_LINE_DETECT
+
+VALUE img_image_line_detect(VALUE self, VALUE direction) {
+    IMAGE_DUP();
+    img_image_line_detect_s(dup, direction);
+    RETURN_DUP_IMAGE();
+}
+
+VALUE img_image_line_detect_bang(VALUE self, VALUE direction) {
+    IMAGE();
+    img_image_line_detect_s(image, direction);
+    return self;
+}
+
+static inline void img_image_line_detect_s(Image *image, VALUE direction) {
+    float *k = xmalloc(sizeof(float) * 9);
+    int dir;
+    if (RB_FIXNUM_P(direction)) {
+        // If float, round to nearest 45°
+        int a, b, d;
+        float n = roundf(fabsf(NUM2FLT(direction)));
+        d = ((int)n) % 360;
+        a = (d / 45) * 45;
+        b = a + 45;
+        d = (d - a > b - d) ? b : a;
+        switch (d) {
+            case 45:
+            case 225:
+                dir = 1;
+                break;
+            case 90:
+            case 270:
+                dir = 2;
+                break;
+            case 135:
+            case 315:
+                dir = 3;
+            default:
+                dir = 0;
+        }
+    } else
+        dir = NUM2INT(direction);
+    switch (dir) {
+        case 0:  // 0°, 180°, 360° (Vertical)
+        {
+            k[0] = k[2] = k[3] = k[5] = k[6] = k[8] = -1.0f;
+            k[1] = k[4] = k[7] = 2.0f;
+            break;
+        }
+        case 1:  // 45°, 225°
+        {
+            k[0] = k[1] = k[3] = k[5] = k[7] = k[8] = -1.0f;
+            k[2] = k[4] = k[6] = 2.0f;
+            break;
+        }
+        case 2:  //  90°, 270° (Horizontal)
+        {
+            k[0] = k[1] = k[2] = k[6] = k[7] = k[8] = -1.0f;
+            k[3] = k[4] = k[5] = 2.0f;
+            break;
+        }
+        case 3:  // 135°, 315°
+        {
+            k[1] = k[2] = k[3] = k[5] = k[6] = k[7] = -1.0f;
+            k[0] = k[4] = k[8] = 2.0f;
+            break;
+        }
+        default:
+            rb_raise(eOpenImageError, "invalid angle specifier given (%d)", dir);
+            break;
+    }
+    img_image_convolution_filter_s(image, k, 3, 3);
+    xfree(k);
 }
 
 #endif

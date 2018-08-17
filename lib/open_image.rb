@@ -6,28 +6,41 @@ require_relative 'open_image/colors'
 require 'benchmark'
 
 
-
-
-
-
 module OpenImage
+
+
+
 
 
   # path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
   path = 'C:/Users/Eric/Desktop/test.jpg'
+  path = 'C:/Users/Eric/Downloads/DSCN1638.JPG'
   img = Image.new(path)
 
-  out = "C:/Users/Eric/Desktop/OUTPUT/edge_detect.png"
-  img.edge_detect.save_png out
+  [0, 1, 2, 3].each_with_index do |i, ii|
 
-  out = "C:/Users/Eric/Desktop/OUTPUT/emboss.png"
-  img.emboss.save_png out
+    out = "C:/Users/Eric/Desktop/OUTPUT/line_detect#{ii}.png"
 
-  out = "C:/Users/Eric/Desktop/OUTPUT/sharpen.png"
-  img.sharpen.save_png out
+    img.line_detect(i).save_png(out)
+
+  end
+
+  exit
+
+
+  out = "C:/Users/Eric/Desktop/OUTPUT/blur.png"
+  img.blur.save_png out
+
+  # out = "C:/Users/Eric/Desktop/OUTPUT/emboss.png"
+  # img.emboss.save_png out
+
+  # out = "C:/Users/Eric/Desktop/OUTPUT/sharpen.png"
+  # img.sharpen.save_png out
 
   exit
   
+
+
   # img.soften.save_png(out)
 
   # exit
