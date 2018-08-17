@@ -11,8 +11,9 @@
 #define OPEN_IMAGE_SOLARIZE 0
 #define OPEN_IMAGE_CONTRAST 0
 #define OPEN_IMAGE_COLOR_BALANCE 0
+#define OPEN_IMAGE_BLUR 1
 
-void img_imgage_matrix_filter_p(Image *image, double *matrix, int rows, int columns, double factor, int bias, int grayscale);
+static void img_imgage_matrix_filter_p(Image *image, double *matrix, int width, int height, double factor, int bias, int grayscale);
 
 void Init_img_image(VALUE module);
 static inline void img_image_free(void *data);
@@ -84,5 +85,17 @@ VALUE img_image_balance(VALUE self, VALUE red, VALUE green, VALUE blue);
 VALUE img_image_balance_bang(VALUE self, VALUE red, VALUE green, VALUE blue);
 static void img_image_balance_s(Image *image, VALUE red, VALUE green, VALUE blue);
 #endif
+
+#if OPEN_IMAGE_BLUR
+VALUE img_image_blur(VALUE self, VALUE size);
+VALUE img_image_blur_bang(VALUE self, VALUE size);
+static void img_image_blur_s(Image *image, int size);
+#endif
+
+static inline void img_image_convolution_filter(Image *image, float *kernel, int kw, int kh);
+
+VALUE img_image_box_blur(VALUE self);
+
+
 
 #endif /* RB_OPEN_IMAGE_IMAGE_H */

@@ -11,6 +11,8 @@
 
 #define RETURN_WRAP_IMAGE(klass, img) return Data_Wrap_Struct(klass, NULL, img_image_free, img)
 
+#define GET_PIXEL(img, x, y, c) ((unsigned char)(img->pixels[(((x) + ((y)*img->width) * COLOR_SIZE) + c)]))
+
 #define IMAGE_DUP()                                           \
     Image *image, *dup;                                       \
     Data_Get_Struct(self, Image, image);                      \
@@ -89,6 +91,11 @@ void Init_img_image(VALUE module) {
 #if OPEN_IMAGE_COLOR_BALANCE
     rb_define_method(cImage, "balance", img_image_balance, 3);
     rb_define_method(cImage, "balance!", img_image_balance_bang, 3);
+#endif
+
+#if OPEN_IMAGE_BLUR
+    rb_define_method(cImage, "blur", img_image_box_blur, 0);
+    // rb_define_method(cImage, "blur!", img_image_blur_bang, 1);
 #endif
 }
 
@@ -684,68 +691,135 @@ VALUE img_image_balance_bang(VALUE self, VALUE red, VALUE green, VALUE blue) {
 }
 
 static void img_image_balance_s(Image *image, VALUE red, VALUE green, VALUE blue) {
-
     float r = fclamp(RB_FLOAT_TYPE_P(red) ? NUM2FLT(red) * 255.0f : (NUM2INT(red)), 0.0f, 255.0f);
     float g = fclamp(RB_FLOAT_TYPE_P(green) ? NUM2FLT(green) * 255.0f : (NUM2INT(green)), 0.0f, 255.0f);
-    float b = fclamp(RB_FLOAT_TYPE_P(blue) ? NUM2FLT(blue) * 255.0f: (NUM2INT(blue)), 0.0f, 255.0f);
+    float b = fclamp(RB_FLOAT_TYPE_P(blue) ? NUM2FLT(blue) * 255.0f : (NUM2INT(blue)), 0.0f, 255.0f);
 
-    Color *p = (Color*) image->pixels;
+    Color *p = (Color *)image->pixels;
     int count = image->width * image->height;
-    for (int i = 0; i < count; i++)
-    {
-        p[i].r = (unsigned char) fclamp(255.0f / r * p[i].r, 0.0f, 255.0f);
-        p[i].g = (unsigned char) fclamp(255.0f / g * p[i].g, 0.0f, 255.0f);
-        p[i].b = (unsigned char) fclamp(255.0f / b * p[i].b, 0.0f, 255.0f);
+    for (int i = 0; i < count; i++) {
+        p[i].r = (unsigned char)fclamp(255.0f / r * p[i].r, 0.0f, 255.0f);
+        p[i].g = (unsigned char)fclamp(255.0f / g * p[i].g, 0.0f, 255.0f);
+        p[i].b = (unsigned char)fclamp(255.0f / b * p[i].b, 0.0f, 255.0f);
     }
 }
 
 #endif
 
+#if OPEN_IMAGE_BLUR
 
+VALUE img_image_blur(VALUE self, VALUE size) {
+    IMAGE_DUP();
+    img_image_blur_s(dup, NUM2INT(size));
+    RETURN_WRAP_STRUCT(CLASS_OF(self), dup);
+}
 
+VALUE img_image_blur_bang(VALUE self, VALUE size) {
+    IMAGE();
+    img_image_blur_s(image, NUM2INT(size));
+    return self;
+}
 
+static void img_image_blur_s(Image *image, int blur_size) {
+    if (blur_size < 1)
+        return;
+    int avg_r, avg_g, avg_b, pix_count, i;
+    ;
+    uint width = image->width, height = image->height;
+    unsigned char *p = *(&image->pixels);
+    size_t size = width * height * COLOR_SIZE;
 
+    for (int xx = 0; xx < width; xx++) {
+        for (int yy = 0; yy < height; yy++) {
+            // Enumerate the pixels around the current pixel
+            avg_r = avg_g = avg_b = pix_count = 0;
+            for (int x = imax(0, xx - blur_size); x <= imin(xx + blur_size, width - 1); x++)
+            // for (int x = xx; (x < xx + blur_size && x < width); x++)
+            {
+                for (int y = imax(0, yy - blur_size); y <= imin(yy + blur_size, height - 1); y++)
+                // for (int y = yy; (y < yy + blur_size && y < height); y++)
+                {
+                    i = (x + (y * width)) * COLOR_SIZE;
+                    avg_r += p[i];
+                    avg_g += p[i + 1];
+                    avg_b += p[i + 2];
+                    pix_count++;
+                }
+            }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void img_imgage_matrix_filter_p(Image *image, double *matrix, int rows, int columns, double factor, int bias, int grayscale) {
-    uint width = image->width;
-    uint height = image->height;
-    uint stride = width * 4;
-    size_t size = height * stride;
-
-    unsigned char *bytes = *(&image->pixels);
-    unsigned char *buffer = xmalloc(size);
-
-    double r, g, b;
-    if (grayscale) {
-        for (int i = 0; i < size; i += COLOR_SIZE) {
-            r = bytes[i] / 255.0;
-            g = bytes[i + 1] / 255.0;
-            b = bytes[i + 2] / 255.0;
-            float mean = (r + g + b) / 3.0;
-            bytes[i] = (unsigned char)((r - (r - mean)) * 255.0);
-            bytes[i + 1] = (unsigned char)((g - (g - mean)) * 255.0);
-            bytes[i + 2] = (unsigned char)((b - (b - mean)) * 255.0);
+            // Calculate average of block size
+            avg_r = (unsigned char)(avg_r / pix_count);
+            avg_g = (unsigned char)(avg_g / pix_count);
+            avg_b = (unsigned char)(avg_b / pix_count);
+            // Set average value to pixels
+            for (int x = xx; (x < xx + blur_size && x < width); x++) {
+                for (int y = yy; (y < yy + blur_size && y < height); y++) {
+                    i = (x + (y * width)) * COLOR_SIZE;
+                    p[i] = avg_r;
+                    p[i + 1] = avg_g;
+                    p[i + 2] = avg_b;
+                }
+            }
         }
     }
+}
 
-    // TODO:
+#endif
+
+static inline void img_image_convolution_filter(Image *image, float *kernel, int kw, int kh) {
+    int offsetX = (kw - 1) / 2;
+    int offsetY = (kh - 1) / 2;
+    float r, g, b, k;
+    uint width = image->width, height = image->height;
+    size_t size = width * height * 4;
+    Color *src = (Color *)image->pixels, *il, *ol, *pixel;
+    Color *buffer = xmalloc(size);
+    for (int y = 0; y < height; y++) {
+        ol = &buffer[y * width];
+        for (int x = 0; x < width; x++) {
+            r = g = b = 0.0f;
+            for (int j = 0; j < kh; j++) {
+                if (y + j < offsetY || y + j - offsetY >= height)
+                    continue;
+                il = &src[(y + j - offsetY) * width];
+                for (int i = 0; i < kw; i++) {
+                    if (x + i < offsetX || x + i - offsetX >= width)
+                        continue;
+                    k = kernel[i + j * kw];
+                    pixel = &il[x + i - offsetX];
+                    r += k * pixel->r;
+                    g += k * pixel->g;
+                    b += k * pixel->b;
+                }
+            }
+            ol[x].r = (unsigned char)fclamp(r, 0.0f, 255.0f);
+            ol[x].g = (unsigned char)fclamp(g, 0.0f, 255.0f);
+            ol[x].b = (unsigned char)fclamp(b, 0.0f, 255.0f);
+            ol[x].a = src[x].a;
+        }
+    }
+    xfree(src);
+    image->pixels = (unsigned char *)buffer;
+}
+
+VALUE img_image_box_blur(VALUE self) {
+    // float *kernel = xmalloc(sizeof(float) * 9);
+    // for (int i = 0; i < 9; i++)
+    //     kernel[i] = -1.0f;
+    // kernel[4] = 8.0f;
+
+    float kernel[9] = {-1, -1, -1,
+                       -1, 8, -1,
+                       -1, -1, -1};
+
+    IMAGE();
+
+    Image *t = ALLOC(Image);
+    t->width = image->width;
+    t->height = image->height;
+
+    img_image_convolution_filter(image, &kernel[0], 3, 3);
+
+    // xfree(kernel);
+    return self;
 }

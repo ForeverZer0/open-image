@@ -5,6 +5,7 @@ require_relative 'open_image/colors'
 
 require 'benchmark'
 
+
 module OpenImage
 
 
@@ -12,16 +13,20 @@ module OpenImage
   path = 'C:/Users/Eric/Desktop/test.jpg'
   img = Image.new(path)
 
-  out = "C:/Users/Eric/Desktop/OUTPUT/balance.png"
-  img.balance(147, 150, 127).save_png(out)
+  out = "C:/Users/Eric/Desktop/OUTPUT/box_blur.png"
+  img.blur.save_png out
 
   exit
+  
+  # img.soften.save_png(out)
 
-  [-1.0, -0.5, 0.0, 0.5, 1.0].each do |i|
+  # exit
 
-    out = "C:/Users/Eric/Desktop/OUTPUT/contrast#{(i * 100).to_i}.png"
+  [1, 2, 4, 8, 10].each do |i|
 
-    img.contrast(i).save_png(out)
+    out = "C:/Users/Eric/Desktop/OUTPUT/blur#{i}.png"
+
+    img.blur(i).save_png(out)
 
   end
 

@@ -10,6 +10,8 @@
 #define STBIW_REALLOC STBI_REALLOC
 #define STBIW_FREE STBI_FREE
 
+#define __USE_MINGW_ANSI_STDIO 1
+
 #include "ruby.h"
 
 #if HAVE_RUBY_VERSION_H
