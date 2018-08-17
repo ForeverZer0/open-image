@@ -40,7 +40,6 @@ ___
 * `delete(color)`
 * `delete!(color)`
 * `adjust_tone(r, g, b)`
-* `grayscale(amount)`
 * `balance(r, g, b)`
 * `tone(r, g, b)`
 * `to_texture` (maybe in gem extending this one?)

@@ -23,6 +23,11 @@ void Init_img_point(VALUE module) {
     rb_define_method(cPoint, "offset!", img_point_offset_bang, -1);
 
     rb_define_alias(cPoint, "to_str", "to_s");
+
+    rb_define_method(cPoint, "_dump", img_point_dump, -1);
+    rb_define_method(cPoint, "pack", img_point_dump, -1);
+    rb_define_singleton_method(cPoint, "_load", img_point_load, 1);
+    rb_define_singleton_method(cPoint, "unpack", img_point_load, 1);
 }
 
 VALUE img_point_alloc(VALUE klass) {
@@ -147,4 +152,12 @@ VALUE img_point_offset_bang(int argc, VALUE *argv, VALUE self) {
     else
         rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 2)", argc);
     return self;
+}
+
+VALUE img_point_dump(int argc, VALUE *argv, VALUE self) {
+    RB_MARSHAL_DUMP(Point);
+}
+
+VALUE img_point_load(VALUE klass, VALUE binary) {
+    RB_MARSHAL_LOAD(Point);
 }

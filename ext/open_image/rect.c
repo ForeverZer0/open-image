@@ -55,6 +55,11 @@ void Init_img_rect(VALUE module) {
     rb_define_method(cRect, "union!", img_rect_union_bang, 1);
     rb_define_method(cRect, "include?", img_rect_include_p, -1);
     rb_define_alias(cRect, "contains?", "include?");
+
+    rb_define_method(cRect, "_dump", img_rect_dump, -1);
+    rb_define_method(cRect, "pack", img_rect_dump, -1);
+    rb_define_singleton_method(cRect, "_load", img_rect_load, 1);
+    rb_define_singleton_method(cRect, "unpack", img_rect_load, 1);
 }
 
 VALUE img_rect_alloc(VALUE klass) {
@@ -456,4 +461,12 @@ VALUE img_rect_include_p(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1, 2)", argc);
 
     return result ? Qtrue : Qfalse;
+}
+
+VALUE img_rect_dump(int argc, VALUE *argv, VALUE self) {
+    RB_MARSHAL_DUMP(Rect);
+}
+
+VALUE img_rect_load(VALUE klass, VALUE binary) {
+    RB_MARSHAL_LOAD(Rect);
 }

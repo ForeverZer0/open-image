@@ -66,6 +66,12 @@ void Init_img_color(VALUE module) {
 
     rb_define_method(cColor, "lerp", img_color_lerp, 2);
     rb_define_method(cColor, "lerp!", img_color_lerp_bang, 2);
+
+    rb_define_method(cColor, "_dump", img_color_dump, -1);
+    rb_define_method(cColor, "pack", img_color_dump, -1);
+    rb_define_singleton_method(cColor, "_load", img_color_load, 1);
+    rb_define_singleton_method(cColor, "unpack", img_color_load, 1);
+
 }
 
 VALUE img_color_alloc(VALUE klass) {
@@ -461,4 +467,12 @@ static inline void img_color_hsb2rgb(Color *color, float hue, float saturation, 
 VALUE img_color_html(VALUE self) {
     COLOR();
     return rb_sprintf("#%2x%2x%2x", color->r, color->g, color->b);
+}
+
+VALUE img_color_dump(int argc, VALUE *argv, VALUE self) {
+    RB_MARSHAL_DUMP(Color);
+}
+
+VALUE img_color_load(VALUE klass, VALUE binary) {
+    RB_MARSHAL_LOAD(Color);
 }

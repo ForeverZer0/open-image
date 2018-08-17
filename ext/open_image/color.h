@@ -47,4 +47,7 @@ VALUE img_color_brightness(VALUE self);
 VALUE img_color_lerp(VALUE self, VALUE other, VALUE amount);
 VALUE img_color_lerp_bang(VALUE self, VALUE other, VALUE amount);
 
+VALUE img_color_dump(int argc, VALUE *argv, VALUE self);
+VALUE img_color_load(VALUE klass, VALUE binary);
+
 #endif /* RB_OPEN_IMAGE_COLOR_H */

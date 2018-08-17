@@ -23,6 +23,11 @@ void Init_img_size(VALUE module) {
     rb_define_method(cSize, "to_s", img_size_to_s, 0);
     rb_define_alias(cSize, "to_str", "to_s");
     rb_define_method(cSize, "dup", img_size_dup, 0);
+
+    rb_define_method(cSize, "_dump", img_size_dump, -1);
+    rb_define_method(cSize, "pack", img_size_dump, -1);
+    rb_define_singleton_method(cSize, "_load", img_size_load, 1);
+    rb_define_singleton_method(cSize, "unpack", img_size_load, 1);
 }
 
 VALUE img_size_alloc(VALUE klass) {
@@ -107,4 +112,12 @@ VALUE img_size_dup(VALUE self) {
     Size *clone = ALLOC(Size);
     memcpy(clone, rdata->data, sizeof(Size));
     RETURN_WRAP_STRUCT(rdata->basic.klass, clone);
+}
+
+VALUE img_size_dump(int argc, VALUE *argv, VALUE self) {
+    RB_MARSHAL_DUMP(Size);
+}
+
+VALUE img_size_load(VALUE klass, VALUE binary) {
+    RB_MARSHAL_LOAD(Size);
 }

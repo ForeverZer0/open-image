@@ -17,13 +17,16 @@ module OpenImage
   path = 'C:/Users/Eric/Downloads/DSCN1638.JPG'
   img = Image.new(path)
 
-  [0, 1, 2, 3].each_with_index do |i, ii|
+  out = "C:/Users/Eric/Desktop/OUTPUT/emboss.png"
+  img.emboss.save_png out
 
-    out = "C:/Users/Eric/Desktop/OUTPUT/line_detect#{ii}.png"
+  # [0, 1, 2, 3].each_with_index do |i, ii|
 
-    img.line_detect(i).save_png(out)
+  #   out = "C:/Users/Eric/Desktop/OUTPUT/line_detect#{ii}.png"
 
-  end
+  #   img.line_detect(i).save_png(out)
+
+  # end
 
   exit
 

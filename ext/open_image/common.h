@@ -34,6 +34,19 @@
 
 #define NUM2FLT(v) ((float)NUM2DBL(v))
 
+#define RB_MARSHAL_DUMP(struct_t)       \
+    struct_t *s;                        \
+    Data_Get_Struct(self, struct_t, s);  \
+    long size = (long)sizeof(struct_t); \
+    return rb_str_new(RDATA(self)->data, size)
+
+#define RB_MARSHAL_LOAD(struct_t)        \
+    size_t size = sizeof(struct_t);      \
+    void *data = StringValuePtr(binary); \
+    struct_t *v = ALLOC(struct_t);       \
+    memcpy(v, data, size);               \
+    return Data_Wrap_Struct(klass, NULL, RUBY_DEFAULT_FREE, v)
+
 typedef unsigned int uint;
 
 typedef struct Image {
