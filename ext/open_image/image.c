@@ -9,6 +9,18 @@
 #define COLOR_SIZE 4 /* For possible future expandment */
 #define COLOR_COMP 4 /* Number of color components */
 
+#define RETURN_WRAP_IMAGE(klass, img) return Data_Wrap_Struct(klass, NULL, img_image_free, img)
+
+#define IMAGE_DUP()                                           \
+    Image *image, *dup;                                       \
+    Data_Get_Struct(self, Image, image);                      \
+    dup = ALLOC(Image);                                       \
+    dup->width = image->width;                                \
+    dup->height = image->height;                              \
+    size_t _size = image->width * image->height * COLOR_SIZE; \
+    dup->pixels = xmalloc(_size);                             \
+    memcpy(*(&dup->pixels), *(&image->pixels), _size)
+
 VALUE cImage;
 
 void Init_img_image(VALUE module) {
@@ -42,11 +54,37 @@ void Init_img_image(VALUE module) {
     rb_define_method(cImage, "set_pixel", img_image_set_pixel, -1);
     rb_define_method(cImage, "fill_rect", img_image_fill_rect, -1);
     rb_define_method(cImage, "subimage", img_image_subimage, -1);
-
     rb_define_method(cImage, "split", img_image_split, 2);
 
-    rb_define_method(cImage, "apply_grayscale", img_image_grayscale, 1);
+#if OPEN_IMAGE_GRAYSCALE
+    rb_define_method(cImage, "grayscale", img_image_grayscale, -1);
+    rb_define_method(cImage, "grayscale!", img_image_grayscale_bang, -1);
+#endif
+
+#if OPEN_IMAGE_SEPIA
     rb_define_method(cImage, "sepia", img_image_sepia, 0);
+    rb_define_method(cImage, "sepia!", img_image_sepia_bang, 0);
+#endif
+
+#if OPEN_IMAGE_INVERT
+    rb_define_method(cImage, "invert", img_image_invert, -1);
+    rb_define_method(cImage, "invert!", img_image_invert_bang, -1);
+#endif
+
+#if OPEN_IMAGE_PIXELATE
+    rb_define_method(cImage, "pixelate", img_image_pixelate, -1);
+    rb_define_method(cImage, "pixelate!", img_image_pixelate_bang, -1);
+#endif
+
+#if OPEN_IMAGE_SOLARIZE
+    rb_define_method(cImage, "solarize", img_image_solarize, 3);
+    rb_define_method(cImage, "solarize!", img_image_solarize_bang, 3);
+#endif
+
+#if OPEN_IMAGE_CONTRAST
+    rb_define_method(cImage, "contrast", img_image_contrast, 1);
+    rb_define_method(cImage, "contrast!", img_image_contrast_bang, 1);
+#endif
 }
 
 static inline void img_image_free(void *data) {
@@ -373,7 +411,8 @@ VALUE img_image_to_s(VALUE self) {
 VALUE img_image_dup(VALUE self) {
     IMAGE();
     Image *clone = ALLOC(Image);
-    memcpy(clone, image, sizeof(uint) * 2);
+    clone->width = image->width;
+    clone->height = image->height;
 
     size_t size = clone->width * clone->height * COLOR_SIZE;
     clone->pixels = xmalloc(size);
@@ -397,38 +436,281 @@ VALUE img_image_ptr(VALUE self) {
 #endif
 }
 
-VALUE img_image_grayscale(VALUE self, VALUE amount) {
-    float gray = fclamp((RB_FLOAT_TYPE_P(amount) ? NUM2FLT(amount) : NUM2INT(amount) / 255.0f), 0.0f, 1.0f);
+#if OPEN_IMAGE_GRAYSCALE
+
+VALUE img_image_grayscale(int argc, VALUE *argv, VALUE self) {
+    VALUE amount;
+    rb_scan_args(argc, argv, "01", &amount);
+    IMAGE_DUP();
+    img_image_grayscale_s(dup, amount);
+    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+}
+
+VALUE img_image_grayscale_bang(int argc, VALUE *argv, VALUE self) {
+    VALUE amount;
+    rb_scan_args(argc, argv, "01", &amount);
     IMAGE();
+    img_image_grayscale_s(image, amount);
+    return self;
+}
+
+static void img_image_grayscale_s(Image *image, VALUE amount) {
+    float gray = 1.0f;
+    if (RTEST(amount))
+        gray = fclamp((RB_FLOAT_TYPE_P(amount) ? NUM2FLT(amount) : NUM2INT(amount) / 255.0f), 0.0f, 1.0f);
     int count = image->width * image->height;
-    Color *pixels = (Color*) image->pixels;
+    Color *pixels = (Color *)image->pixels;
     float r, g, b;
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
         r = pixels[i].r / 255.0f;
         g = pixels[i].g / 255.0f;
         b = pixels[i].b / 255.0f;
         float mean = (r + g + b) / 3.0f;
-        pixels[i].r = (unsigned char) ((r - ((r - mean) * gray)) * 255.0f);
-        pixels[i].g = (unsigned char) ((g - ((g - mean) * gray)) * 255.0f);
-        pixels[i].b = (unsigned char) ((b - ((b - mean) * gray)) * 255.0f);
+        pixels[i].r = (unsigned char)((r - ((r - mean) * gray)) * 255.0f);
+        pixels[i].g = (unsigned char)((g - ((g - mean) * gray)) * 255.0f);
+        pixels[i].b = (unsigned char)((b - ((b - mean) * gray)) * 255.0f);
     }
+}
+
+#endif
+
+#if OPEN_IMAGE_SEPIA
+
+VALUE img_image_sepia(VALUE self) {
+    IMAGE_DUP();
+    img_image_sepia_s(dup);
+    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+}
+
+VALUE img_image_sepia_bang(VALUE self) {
+    IMAGE();
+    img_image_sepia_s(image);
     return self;
 }
 
-VALUE img_image_sepia(VALUE self) {
-    IMAGE();
+static void img_image_sepia_s(Image *image) {
     int count = image->width * image->height * COLOR_SIZE;
-    unsigned char *bytes =  *(&image->pixels);
+    unsigned char *p = *(&image->pixels);
     unsigned char r, g, b;
-    for (int i = 0; i < count; i += COLOR_SIZE)
-    {
-        r = fmin(bytes[i] * 0.189f + bytes[i + 1] * 0.769f + bytes[i + 2] * 0.393f, 255.0f);
-        g = fmin(bytes[i] * 0.168f + bytes[i + 1] * 0.686f + bytes[i + 2] * 0.349f, 255.0f);
-        b = fmin(bytes[i] * 0.131f + bytes[i + 1] * 0.534f + bytes[i + 2] * 0.272f, 255.0f);
-        bytes[i] = (unsigned char) r;
-        bytes[i + 1] = (unsigned char) g;
-        bytes[i + 2] = (unsigned char) b;
+    for (int i = 0; i < count; i += COLOR_SIZE) {
+        r = fmin(p[i] * 0.189f + p[i + 1] * 0.769f + p[i + 2] * 0.393f, 255.0f);
+        g = fmin(p[i] * 0.168f + p[i + 1] * 0.686f + p[i + 2] * 0.349f, 255.0f);
+        b = fmin(p[i] * 0.131f + p[i + 1] * 0.534f + p[i + 2] * 0.272f, 255.0f);
+        p[i] = (unsigned char)r;
+        p[i + 1] = (unsigned char)g;
+        p[i + 2] = (unsigned char)b;
     }
+}
+
+#endif
+
+#if OPEN_IMAGE_INVERT
+
+VALUE img_image_invert(int argc, VALUE *argv, VALUE self) {
+    IMAGE_DUP();
+    VALUE alpha;
+    rb_scan_args(argc, argv, "01", &alpha);
+    img_image_invert_s(image, RTEST(alpha));
+    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+}
+
+VALUE img_image_invert_bang(int argc, VALUE *argv, VALUE self) {
+    IMAGE();
+    VALUE alpha;
+    rb_scan_args(argc, argv, "01", &alpha);
+    img_image_invert_s(image, RTEST(alpha));
     return self;
+}
+
+static void img_image_invert_s(Image *image, int alpha) {
+    int count = image->width * image->height * COLOR_SIZE;
+    unsigned char *p = *(&image->pixels);
+    for (int i = 0; i < count; i += COLOR_SIZE) {
+        p[i] = 255 - p[i];
+        p[i + 1] = 255 - p[i + 1];
+        p[i + 2] = 255 - p[i + 2];
+        if (alpha)
+            p[i + 3] = 255 - p[i + 3];
+    }
+}
+
+#endif
+
+#if OPEN_IMAGE_PIXELATE
+
+VALUE img_image_pixelate(int argc, VALUE *argv, VALUE self) {
+    VALUE pixel_size, avg_alpha;
+    rb_scan_args(argc, argv, "11", &pixel_size, &avg_alpha);
+    int pix = NUM2INT(pixel_size);
+    int avg = NIL_P(avg_alpha) ? 1 : RTEST(avg_alpha);
+    IMAGE_DUP();
+    img_image_pixelate_s(dup, pix, avg);
+    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+}
+
+VALUE img_image_pixelate_bang(int argc, VALUE *argv, VALUE self) {
+    VALUE pixel_size, avg_alpha;
+    rb_scan_args(argc, argv, "11", &pixel_size, &avg_alpha);
+    int pix = NUM2INT(pixel_size);
+    int avg = NIL_P(avg_alpha) ? 1 : RTEST(avg_alpha);
+    IMAGE();
+    img_image_pixelate_s(image, pix, avg);
+    return self;
+}
+
+static void img_image_pixelate_s(Image *image, int pix, int avg) {
+    unsigned char *p = *(&image->pixels);
+    int r, g, b, a, p_count, width = image->width, height = image->height;
+
+    for (int x = 0; x < width; x += pix) {
+        for (int y = 0; y < height; y += pix) {
+            r = g = b = a = p_count = 0;
+            // Add the value of each color component of surrounding pixels
+            for (int x2 = 0; x2 < pix; x2++) {
+                for (int y2 = 0; y2 < pix; y2++) {
+                    if ((x + x2 < width) && ((y + y2 < height))) {
+                        int i = ((x + x2) * 4) + ((y + y2) * (width * 4));
+                        r += p[i];
+                        g += p[i + 1];
+                        b += p[i + 2];
+                        a += p[i + 3];
+                        p_count++;
+                    } else  // Edge of the image
+                        break;
+                }
+            }
+            // Calculate average color of surrounding pixels
+            r /= p_count;
+            g /= p_count;
+            b /= p_count;
+            a /= p_count;
+            for (int x2 = 0; x2 < pix; x2++) {
+                for (int y2 = 0; y2 < pix; y2++) {
+                    if ((x + x2 < width) && ((y + y2 < height))) {
+                        int i = ((x + x2) * 4) + ((y + y2) * (width * 4));
+                        p[i] = r;
+                        p[i + 1] = g;
+                        p[i + 2] = b;
+                        if (avg)
+                            p[i + 3] = a;
+                    } else
+                        break;
+                }
+            }
+        }
+    }
+}
+
+#endif
+
+#if OPEN_IMAGE_SOLARIZE
+
+VALUE img_image_solarize(VALUE self, VALUE red, VALUE green, VALUE blue) {
+    IMAGE_DUP();
+    img_image_solarize_s(dup, red, green, blue);
+    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+}
+
+VALUE img_image_solarize_bang(VALUE self, VALUE red, VALUE green, VALUE blue) {
+    IMAGE();
+    img_image_solarize_s(image, red, green, blue);
+    return self;
+}
+
+static void img_image_solarize_s(Image *image, VALUE red, VALUE green, VALUE blue) {
+    unsigned char r = (unsigned char)iclamp(RB_FLOAT_TYPE_P(red) ? roundf(NUM2FLT(red) * 255.0f) : NUM2INT(red), 0, 255);
+    unsigned char g = (unsigned char)iclamp(RB_FLOAT_TYPE_P(green) ? roundf(NUM2FLT(green) * 255.0f) : NUM2INT(green), 0, 255);
+    unsigned char b = (unsigned char)iclamp(RB_FLOAT_TYPE_P(blue) ? roundf(NUM2FLT(blue) * 255.0f) : NUM2INT(blue), 0, 255);
+    Color *p = (Color *)image->pixels;
+    int count = image->width * image->height;
+    for (int i = 0; i < count; i++) {
+        if (p[i].r < r)
+            p[i].r = 255 - p[i].r;
+        if (p[i].g < g)
+            p[i].g = 255 - p[i].g;
+        if (p[i].b < b)
+            p[i].b = 255 - p[i].b;
+    }
+}
+
+#endif
+
+#if OPEN_IMAGE_CONTRAST
+
+VALUE img_image_contrast(VALUE self, VALUE contrast) {
+    IMAGE_DUP();
+    img_image_contrast_s(dup, contrast);
+    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+}
+
+VALUE img_image_contrast_bang(VALUE self, VALUE contrast) {
+    IMAGE();
+    img_image_contrast_s(image, contrast);
+    return self;
+}
+
+static void img_image_contrast_s(Image *image, VALUE contrast) {
+    float c = fclamp(NUM2FLT(contrast) + 1.0f, 0.0f, 2.0f);
+    c *= c;
+    Color *p = (Color *)image->pixels;
+    int count = image->width * image->height;
+
+    for (int i = 0; i < count; i++) {
+        p[i].r = (unsigned char)fclamp((((p[i].r / 255.0f - 0.5f) * c) + 0.5f) * 255.0f, 0.0f, 255.0);
+        p[i].g = (unsigned char)fclamp((((p[i].g / 255.0f - 0.5f) * c) + 0.5f) * 255.0f, 0.0f, 255.0);
+        p[i].b = (unsigned char)fclamp((((p[i].b / 255.0f - 0.5f) * c) + 0.5f) * 255.0f, 0.0f, 255.0);
+    }
+}
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void img_imgage_matrix_filter_p(Image *image, double *matrix, int rows, int columns, double factor, int bias, int grayscale) {
+    uint width = image->width;
+    uint height = image->height;
+    uint stride = width * 4;
+    size_t size = height * stride;
+
+    unsigned char *bytes = *(&image->pixels);
+    unsigned char *buffer = xmalloc(size);
+
+    double r, g, b;
+    if (grayscale) {
+        for (int i = 0; i < size; i += COLOR_SIZE) {
+            r = bytes[i] / 255.0;
+            g = bytes[i + 1] / 255.0;
+            b = bytes[i + 2] / 255.0;
+            float mean = (r + g + b) / 3.0;
+            bytes[i] = (unsigned char)((r - (r - mean)) * 255.0);
+            bytes[i + 1] = (unsigned char)((g - (g - mean)) * 255.0);
+            bytes[i + 2] = (unsigned char)((b - (b - mean)) * 255.0);
+        }
+    }
+
+    // TODO:
 }

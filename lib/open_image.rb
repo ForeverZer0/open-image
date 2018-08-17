@@ -7,24 +7,26 @@ require 'benchmark'
 
 module OpenImage
 
+
   path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
   img = Image.new(path)
 
-  out = 'C:/Users/Eric/Desktop/OUTPUT/gray.png'
+  # out = "C:/Users/Eric/Desktop/OUTPUT/posterize.png"
+  # img.solarize(16, 16, 8).save_png(out)
 
-  img.sepia
-  
-  img.save_png(out)
+  # exit
+
+  [-1.0, -0.5, 0.0, 0.5, 1.0].each do |i|
+
+    out = "C:/Users/Eric/Desktop/OUTPUT/contrast#{(i * 100).to_i}.png"
+
+    img.contrast(i).save_png(out)
+
+  end
+
 
   exit
 
-  color = Colors.red
-
-  color.r = 278
-  color.a = -1.7
-
-  p [color.r, color.g, color.b, color.a] 
-  p [color.red, color.green, color.blue, color.alpha] 
 
 
   # count = 1_000_000

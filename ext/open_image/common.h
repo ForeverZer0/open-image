@@ -22,15 +22,6 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
-#define OPEN_IMAGE_DEBUG 0
-#if OPEN_IMAGE_DEBUG
-#define DEBUG printf
-#else
-#define DEBUG(...) \
-    do {           \
-    } while (0)
-#endif
-
 #define RETURN_WRAP_STRUCT(klass, obj) return Data_Wrap_Struct(klass, NULL, RUBY_DEFAULT_FREE, obj)
 #define STR2SYM(str) ID2SYM(rb_intern(str))
 
