@@ -7,11 +7,9 @@
 
 #define JPEG_QUALITY 90
 #define COLOR_SIZE 4 /* For possible future expandment */
-#define COLOR_COMP 4 /* Number of color components */
 
 #define RETURN_WRAP_IMAGE(klass, img) return Data_Wrap_Struct(klass, NULL, img_image_free, img)
-
-#define GET_PIXEL(img, x, y, c) ((unsigned char)(img->pixels[(((x) + ((y)*img->width) * COLOR_SIZE) + c)]))
+#define RETURN_DUP_IMAGE() return Data_Wrap_Struct(CLASS_OF(self), NULL, img_image_free, dup)
 
 #define IMAGE_DUP()                                           \
     Image *image, *dup;                                       \
@@ -21,7 +19,7 @@
     dup->height = image->height;                              \
     size_t _size = image->width * image->height * COLOR_SIZE; \
     dup->pixels = xmalloc(_size);                             \
-    memcpy(*(&dup->pixels), *(&image->pixels), _size)
+    memcpy(dup->pixels, image->pixels, _size)
 
 VALUE cImage;
 
@@ -93,10 +91,22 @@ void Init_img_image(VALUE module) {
     rb_define_method(cImage, "balance!", img_image_balance_bang, 3);
 #endif
 
-#if OPEN_IMAGE_BLUR
-    rb_define_method(cImage, "blur", img_image_box_blur, 0);
-    // rb_define_method(cImage, "blur!", img_image_blur_bang, 1);
+#if OPEN_IMAGE_CONVOLUTION_FILTER
+
+    rb_define_method(cImage, "filter", img_image_convolution_filter, 1);
+    rb_define_method(cImage, "filter!", img_image_convolution_filter_bang, 1);
+
+#if OPEN_IMAGE_BOX_BLUR
+    rb_define_method(cImage, "box_blur", img_image_box_blur, 0);
+    rb_define_method(cImage, "box_blur!", img_image_box_blur_bang, 0);
 #endif
+
+#if OPEN_IMAGE_GAUSSIAN_BLUR
+    rb_define_method(cImage, "gaussian_blur", img_image_gaussian, 0);
+    rb_define_method(cImage, "gaussian_blur!", img_image_gaussian_bang, 0);
+#endif
+
+#endif /* OPEN_IMAGE_CONVOLUTION_FILTER */
 }
 
 static inline void img_image_free(void *data) {
@@ -137,7 +147,7 @@ VALUE img_image_initialize(int argc, VALUE *argv, VALUE self) {
             stbi_set_flip_vertically_on_load(TRUE);
 
         int n;
-        image->pixels = (unsigned char *)stbi_load(filename, &image->width, &image->height, &n, COLOR_COMP);
+        image->pixels = (unsigned char *)stbi_load(filename, &image->width, &image->height, &n, COLOR_SIZE);
 
         if (flip)
             stbi_set_flip_vertically_on_load(FALSE);
@@ -196,7 +206,7 @@ VALUE img_image_save_png(VALUE self, VALUE path) {
     IMAGE();
     const char *filename = StringValueCStr(path);
     int stride = image->width * COLOR_SIZE;
-    int result = stbi_write_png(filename, image->width, image->height, COLOR_COMP, image->pixels, stride);
+    int result = stbi_write_png(filename, image->width, image->height, COLOR_SIZE, image->pixels, stride);
     return result ? Qtrue : Qfalse;
 }
 
@@ -208,21 +218,21 @@ VALUE img_image_save_jpg(int argc, VALUE *argv, VALUE self) {
     int q = NIL_P(quality) ? JPEG_QUALITY : NUM2INT(quality);
     const char *filename = StringValueCStr(path);
 
-    int result = stbi_write_jpg(filename, image->width, image->height, COLOR_COMP, image->pixels, q);
+    int result = stbi_write_jpg(filename, image->width, image->height, COLOR_SIZE, image->pixels, q);
     return result ? Qtrue : Qfalse;
 }
 
 VALUE img_image_save_tga(VALUE self, VALUE path) {
     IMAGE();
     const char *filename = StringValueCStr(path);
-    int result = stbi_write_tga(filename, image->width, image->height, COLOR_COMP, image->pixels);
+    int result = stbi_write_tga(filename, image->width, image->height, COLOR_SIZE, image->pixels);
     return result ? Qtrue : Qfalse;
 }
 
 VALUE img_image_save_bmp(VALUE self, VALUE path) {
     IMAGE();
     const char *filename = StringValueCStr(path);
-    int result = stbi_write_bmp(filename, image->width, image->height, COLOR_COMP, image->pixels);
+    int result = stbi_write_bmp(filename, image->width, image->height, COLOR_SIZE, image->pixels);
     return result ? Qtrue : Qfalse;
 }
 
@@ -421,16 +431,8 @@ VALUE img_image_to_s(VALUE self) {
 }
 
 VALUE img_image_dup(VALUE self) {
-    IMAGE();
-    Image *clone = ALLOC(Image);
-    clone->width = image->width;
-    clone->height = image->height;
-
-    size_t size = clone->width * clone->height * COLOR_SIZE;
-    clone->pixels = xmalloc(size);
-    memcpy(*(&clone->pixels), *(&image->pixels), size);
-
-    return Data_Wrap_Struct(CLASS_OF(self), NULL, img_image_free, clone);
+    IMAGE_DUP();
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_ptr(VALUE self) {
@@ -455,7 +457,7 @@ VALUE img_image_grayscale(int argc, VALUE *argv, VALUE self) {
     rb_scan_args(argc, argv, "01", &amount);
     IMAGE_DUP();
     img_image_grayscale_s(dup, amount);
-    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_grayscale_bang(int argc, VALUE *argv, VALUE self) {
@@ -466,7 +468,7 @@ VALUE img_image_grayscale_bang(int argc, VALUE *argv, VALUE self) {
     return self;
 }
 
-static void img_image_grayscale_s(Image *image, VALUE amount) {
+static inline void img_image_grayscale_s(Image *image, VALUE amount) {
     float gray = 1.0f;
     if (RTEST(amount))
         gray = fclamp((RB_FLOAT_TYPE_P(amount) ? NUM2FLT(amount) : NUM2INT(amount) / 255.0f), 0.0f, 1.0f);
@@ -491,7 +493,7 @@ static void img_image_grayscale_s(Image *image, VALUE amount) {
 VALUE img_image_sepia(VALUE self) {
     IMAGE_DUP();
     img_image_sepia_s(dup);
-    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_sepia_bang(VALUE self) {
@@ -500,7 +502,7 @@ VALUE img_image_sepia_bang(VALUE self) {
     return self;
 }
 
-static void img_image_sepia_s(Image *image) {
+static inline void img_image_sepia_s(Image *image) {
     int count = image->width * image->height * COLOR_SIZE;
     unsigned char *p = *(&image->pixels);
     unsigned char r, g, b;
@@ -523,7 +525,7 @@ VALUE img_image_invert(int argc, VALUE *argv, VALUE self) {
     VALUE alpha;
     rb_scan_args(argc, argv, "01", &alpha);
     img_image_invert_s(image, RTEST(alpha));
-    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_invert_bang(int argc, VALUE *argv, VALUE self) {
@@ -534,7 +536,7 @@ VALUE img_image_invert_bang(int argc, VALUE *argv, VALUE self) {
     return self;
 }
 
-static void img_image_invert_s(Image *image, int alpha) {
+static inline void img_image_invert_s(Image *image, int alpha) {
     int count = image->width * image->height * COLOR_SIZE;
     unsigned char *p = *(&image->pixels);
     for (int i = 0; i < count; i += COLOR_SIZE) {
@@ -557,7 +559,7 @@ VALUE img_image_pixelate(int argc, VALUE *argv, VALUE self) {
     int avg = NIL_P(avg_alpha) ? 1 : RTEST(avg_alpha);
     IMAGE_DUP();
     img_image_pixelate_s(dup, pix, avg);
-    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_pixelate_bang(int argc, VALUE *argv, VALUE self) {
@@ -570,7 +572,7 @@ VALUE img_image_pixelate_bang(int argc, VALUE *argv, VALUE self) {
     return self;
 }
 
-static void img_image_pixelate_s(Image *image, int pix, int avg) {
+static inline void img_image_pixelate_s(Image *image, int pix, int avg) {
     unsigned char *p = *(&image->pixels);
     int r, g, b, a, p_count, width = image->width, height = image->height;
 
@@ -620,7 +622,7 @@ static void img_image_pixelate_s(Image *image, int pix, int avg) {
 VALUE img_image_solarize(VALUE self, VALUE red, VALUE green, VALUE blue) {
     IMAGE_DUP();
     img_image_solarize_s(dup, red, green, blue);
-    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_solarize_bang(VALUE self, VALUE red, VALUE green, VALUE blue) {
@@ -629,7 +631,7 @@ VALUE img_image_solarize_bang(VALUE self, VALUE red, VALUE green, VALUE blue) {
     return self;
 }
 
-static void img_image_solarize_s(Image *image, VALUE red, VALUE green, VALUE blue) {
+static inline void img_image_solarize_s(Image *image, VALUE red, VALUE green, VALUE blue) {
     unsigned char r = (unsigned char)iclamp(RB_FLOAT_TYPE_P(red) ? roundf(NUM2FLT(red) * 255.0f) : NUM2INT(red), 0, 255);
     unsigned char g = (unsigned char)iclamp(RB_FLOAT_TYPE_P(green) ? roundf(NUM2FLT(green) * 255.0f) : NUM2INT(green), 0, 255);
     unsigned char b = (unsigned char)iclamp(RB_FLOAT_TYPE_P(blue) ? roundf(NUM2FLT(blue) * 255.0f) : NUM2INT(blue), 0, 255);
@@ -652,7 +654,7 @@ static void img_image_solarize_s(Image *image, VALUE red, VALUE green, VALUE blu
 VALUE img_image_contrast(VALUE self, VALUE contrast) {
     IMAGE_DUP();
     img_image_contrast_s(dup, contrast);
-    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_contrast_bang(VALUE self, VALUE contrast) {
@@ -661,7 +663,7 @@ VALUE img_image_contrast_bang(VALUE self, VALUE contrast) {
     return self;
 }
 
-static void img_image_contrast_s(Image *image, VALUE contrast) {
+static inline void img_image_contrast_s(Image *image, VALUE contrast) {
     float c = fclamp(NUM2FLT(contrast) + 1.0f, 0.0f, 2.0f);
     c *= c;
     Color *p = (Color *)image->pixels;
@@ -681,7 +683,7 @@ static void img_image_contrast_s(Image *image, VALUE contrast) {
 VALUE img_image_balance(VALUE self, VALUE red, VALUE green, VALUE blue) {
     IMAGE_DUP();
     img_image_balance_s(dup, red, green, blue);
-    RETURN_WRAP_IMAGE(CLASS_OF(self), dup);
+    RETURN_DUP_IMAGE();
 }
 
 VALUE img_image_balance_bang(VALUE self, VALUE red, VALUE green, VALUE blue) {
@@ -690,7 +692,7 @@ VALUE img_image_balance_bang(VALUE self, VALUE red, VALUE green, VALUE blue) {
     return self;
 }
 
-static void img_image_balance_s(Image *image, VALUE red, VALUE green, VALUE blue) {
+static inline void img_image_balance_s(Image *image, VALUE red, VALUE green, VALUE blue) {
     float r = fclamp(RB_FLOAT_TYPE_P(red) ? NUM2FLT(red) * 255.0f : (NUM2INT(red)), 0.0f, 255.0f);
     float g = fclamp(RB_FLOAT_TYPE_P(green) ? NUM2FLT(green) * 255.0f : (NUM2INT(green)), 0.0f, 255.0f);
     float b = fclamp(RB_FLOAT_TYPE_P(blue) ? NUM2FLT(blue) * 255.0f : (NUM2INT(blue)), 0.0f, 255.0f);
@@ -706,67 +708,53 @@ static void img_image_balance_s(Image *image, VALUE red, VALUE green, VALUE blue
 
 #endif
 
-#if OPEN_IMAGE_BLUR
+#if OPEN_IMAGE_CONVOLUTION_FILTER
 
-VALUE img_image_blur(VALUE self, VALUE size) {
+VALUE img_image_convolution_filter(VALUE self, VALUE matrix) {
+    Check_Type(matrix, T_ARRAY);
+    long kw, kh;
+    kh = rb_array_len(matrix);
+    if (kh % 2 != 0)
+        rb_raise(eOpenImageError, "kernel for convolution filter must have odd-sized dimensions (given %d)", kh);
+    float *kernel = xmalloc(sizeof(float) * (kh * kh));
+    for (long i = 0; i < kh; i++) {
+        VALUE row = rb_ary_entry(matrix, i);
+        Check_Type(row, T_ARRAY);
+        kw = rb_array_len(row);
+        if (kw % 2 != 0)
+            rb_raise(eOpenImageError, "kernel for convolution filter must have odd-sized dimensions (given %d)", kw);
+        for (long j = 0; j < kw; j++)
+            kernel[i + (j * kw)] = NUM2FLT(rb_ary_entry(row, j));
+    }
     IMAGE_DUP();
-    img_image_blur_s(dup, NUM2INT(size));
-    RETURN_WRAP_STRUCT(CLASS_OF(self), dup);
+    img_image_convolution_filter_s(dup, kernel, kw, kh);
+    xfree(kernel);
+    RETURN_DUP_IMAGE();
 }
 
-VALUE img_image_blur_bang(VALUE self, VALUE size) {
+VALUE img_image_convolution_filter_bang(VALUE self, VALUE matrix) {
+    Check_Type(matrix, T_ARRAY);
+    long kw, kh;
+    kh = rb_array_len(matrix);
+    if (kh % 2 != 0)
+        rb_raise(eOpenImageError, "kernel for convolution filter must have odd-sized dimensions (given %d)", kh);
+    float *kernel = xmalloc(sizeof(float) * (kh * kh));
+    for (long i = 0; i < kh; i++) {
+        VALUE row = rb_ary_entry(matrix, i);
+        Check_Type(row, T_ARRAY);
+        kw = rb_array_len(row);
+        if (kw % 2 != 0)
+            rb_raise(eOpenImageError, "kernel for convolution filter must have odd-sized dimensions (given %d)", kw);
+        for (long j = 0; j < kw; j++)
+            kernel[i + (j * kw)] = NUM2FLT(rb_ary_entry(row, j));
+    }
     IMAGE();
-    img_image_blur_s(image, NUM2INT(size));
+    img_image_convolution_filter_s(image, kernel, kw, kh);
+    xfree(kernel);
     return self;
 }
 
-static void img_image_blur_s(Image *image, int blur_size) {
-    if (blur_size < 1)
-        return;
-    int avg_r, avg_g, avg_b, pix_count, i;
-    ;
-    uint width = image->width, height = image->height;
-    unsigned char *p = *(&image->pixels);
-    size_t size = width * height * COLOR_SIZE;
-
-    for (int xx = 0; xx < width; xx++) {
-        for (int yy = 0; yy < height; yy++) {
-            // Enumerate the pixels around the current pixel
-            avg_r = avg_g = avg_b = pix_count = 0;
-            for (int x = imax(0, xx - blur_size); x <= imin(xx + blur_size, width - 1); x++)
-            // for (int x = xx; (x < xx + blur_size && x < width); x++)
-            {
-                for (int y = imax(0, yy - blur_size); y <= imin(yy + blur_size, height - 1); y++)
-                // for (int y = yy; (y < yy + blur_size && y < height); y++)
-                {
-                    i = (x + (y * width)) * COLOR_SIZE;
-                    avg_r += p[i];
-                    avg_g += p[i + 1];
-                    avg_b += p[i + 2];
-                    pix_count++;
-                }
-            }
-
-            // Calculate average of block size
-            avg_r = (unsigned char)(avg_r / pix_count);
-            avg_g = (unsigned char)(avg_g / pix_count);
-            avg_b = (unsigned char)(avg_b / pix_count);
-            // Set average value to pixels
-            for (int x = xx; (x < xx + blur_size && x < width); x++) {
-                for (int y = yy; (y < yy + blur_size && y < height); y++) {
-                    i = (x + (y * width)) * COLOR_SIZE;
-                    p[i] = avg_r;
-                    p[i + 1] = avg_g;
-                    p[i + 2] = avg_b;
-                }
-            }
-        }
-    }
-}
-
-#endif
-
-static inline void img_image_convolution_filter(Image *image, float *kernel, int kw, int kh) {
+static inline void img_image_convolution_filter_s(Image *image, float *kernel, int kw, int kh) {
     int offsetX = (kw - 1) / 2;
     int offsetY = (kh - 1) / 2;
     float r, g, b, k;
@@ -802,24 +790,52 @@ static inline void img_image_convolution_filter(Image *image, float *kernel, int
     image->pixels = (unsigned char *)buffer;
 }
 
+#if OPEN_IMAGE_BOX_BLUR
+
 VALUE img_image_box_blur(VALUE self) {
-    // float *kernel = xmalloc(sizeof(float) * 9);
-    // for (int i = 0; i < 9; i++)
-    //     kernel[i] = -1.0f;
-    // kernel[4] = 8.0f;
+    IMAGE_DUP();
+    img_image_box_blur_s(dup);
+    RETURN_DUP_IMAGE();
+}
 
-    float kernel[9] = {-1, -1, -1,
-                       -1, 8, -1,
-                       -1, -1, -1};
-
+VALUE img_image_box_blur_bang(VALUE self) {
     IMAGE();
-
-    Image *t = ALLOC(Image);
-    t->width = image->width;
-    t->height = image->height;
-
-    img_image_convolution_filter(image, &kernel[0], 3, 3);
-
-    // xfree(kernel);
+    img_image_box_blur_s(image);
     return self;
 }
+
+static inline void img_image_box_blur_s(Image *image) {
+    float kernel[9];
+    for (int i = 0; i < 9; i++)
+        kernel[i] = 1.0f / 9.0f;
+    img_image_convolution_filter_s(image, kernel, 3, 3);
+}
+
+#endif
+
+#if OPEN_IMAGE_GAUSSIAN_BLUR
+
+VALUE img_image_gaussian(VALUE self) {
+    IMAGE_DUP();
+    img_image_gaussian_s(dup);
+    RETURN_DUP_IMAGE();
+}
+
+VALUE img_image_gaussian_bang(VALUE self) {
+    IMAGE();
+    img_image_box_blur_s(image);
+    return self;
+}
+
+static inline void img_image_gaussian_s(Image *image) {
+    float kernel[25] = {1.0f / 273.0f, 4.0f / 273.0f, 7.0f / 273.0f, 4.0f / 273.0f, 1.0f / 273.0f,
+                        4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f,
+                        7.0f / 273.0f, 26.0f / 273.0f, 41.0f / 273.0f, 26.0f / 273.0f, 7.0f / 273.0f,
+                        4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f,
+                        1.0f / 273.0f, 4.0f / 273.0f, 7.0f / 273.0f, 4.0f / 273.0f, 1.0f / 273.0f};
+    img_image_convolution_filter_s(image, kernel, 7, 7);
+}
+
+#endif
+
+#endif /* OPEN_IMAGE_CONVOLUTION_FILTER */

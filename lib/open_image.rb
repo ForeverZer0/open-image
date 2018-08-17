@@ -6,6 +6,10 @@ require_relative 'open_image/colors'
 require 'benchmark'
 
 
+
+
+
+
 module OpenImage
 
 
@@ -13,8 +17,8 @@ module OpenImage
   path = 'C:/Users/Eric/Desktop/test.jpg'
   img = Image.new(path)
 
-  out = "C:/Users/Eric/Desktop/OUTPUT/box_blur.png"
-  img.blur.save_png out
+  out = "C:/Users/Eric/Desktop/OUTPUT/gaussian2.png"
+  img.gaussian_blur.save_png out
 
   exit
   

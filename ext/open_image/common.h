@@ -21,6 +21,7 @@
 #define USE_FIDDLE 0
 #endif
 
+#include "features.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
 
