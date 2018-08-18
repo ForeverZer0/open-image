@@ -18,6 +18,7 @@ void Init_img_point(VALUE module) {
     rb_define_method(cPoint, "to_h", img_point_to_h, 0);
     rb_define_method(cPoint, "to_s", img_point_to_s, 0);
     rb_define_method(cPoint, "dup", img_point_dup, 0);
+    rb_define_method(cPoint, "==", img_point_eql, 1);
 
     rb_define_method(cPoint, "offset", img_point_offset, -1);
     rb_define_method(cPoint, "offset!", img_point_offset_bang, -1);
@@ -46,13 +47,16 @@ VALUE img_point_initialize(int argc, VALUE *argv, VALUE self) {
             Data_Get_Struct(argv[0], Size, size);
             point->x = size->width;
             point->y = size->height;
+            break;
         }
         case 2: {
             point->x = NUM2INT(argv[0]);
             point->y = NUM2INT(argv[1]);
+            break;
         }
         default:
             rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 0, 1, 2)", argc);
+            break;
     }
     return Qnil;
 }
@@ -160,4 +164,8 @@ VALUE img_point_dump(int argc, VALUE *argv, VALUE self) {
 
 VALUE img_point_load(VALUE klass, VALUE binary) {
     RB_MARSHAL_LOAD(Point);
+}
+
+VALUE img_point_eql(VALUE self, VALUE other) {
+    RB_DATA_EQL(Point);
 }

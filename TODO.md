@@ -32,9 +32,6 @@ ___
 
 ## Image
 
-* `blit(point, image)`
-* `blit(x, y, image)`
-* `blit(rect, image)`
 * `draw_rect(x, y, width, height, color, thickness)`
 * `draw_rect(rect, color, thickness)`
 * `delete(color)`

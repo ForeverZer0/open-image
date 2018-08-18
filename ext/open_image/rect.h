@@ -33,6 +33,7 @@ VALUE img_rect_to_a(VALUE self);
 VALUE img_rect_to_h(VALUE self);
 VALUE img_rect_to_s(VALUE self);
 VALUE img_rect_dup(VALUE self);
+VALUE img_rect_eql(VALUE self, VALUE other);
 
 VALUE img_rect_offset(int argc, VALUE *argv, VALUE self);
 VALUE img_rect_offset_bang(int argc, VALUE *argv, VALUE self);

@@ -36,7 +36,7 @@
 
 #define RB_MARSHAL_DUMP(struct_t)       \
     struct_t *s;                        \
-    Data_Get_Struct(self, struct_t, s);  \
+    Data_Get_Struct(self, struct_t, s); \
     long size = (long)sizeof(struct_t); \
     return rb_str_new(RDATA(self)->data, size)
 
@@ -46,6 +46,16 @@
     struct_t *v = ALLOC(struct_t);       \
     memcpy(v, data, size);               \
     return Data_Wrap_Struct(klass, NULL, RUBY_DEFAULT_FREE, v)
+
+#define RB_DATA_EQL(struct_t)             \
+    if (self == other)                    \
+        return Qtrue;                     \
+    if (TYPE(other) != T_DATA)            \
+        return Qfalse;                    \
+    struct_t *v1, *v2;                    \
+    Data_Get_Struct(self, struct_t, v1);  \
+    Data_Get_Struct(other, struct_t, v2); \
+    return memcmp(v1, v2, sizeof(struct_t)) ? Qfalse : Qtrue
 
 typedef unsigned int uint;
 

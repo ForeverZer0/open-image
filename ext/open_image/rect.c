@@ -43,6 +43,7 @@ void Init_img_rect(VALUE module) {
     rb_define_method(cRect, "to_s", img_rect_to_s, 0);
     rb_define_alias(cRect, "to_str", "to_s");
     rb_define_method(cRect, "dup", img_rect_dup, 0);
+    rb_define_method(cRect, "==", img_rect_eql, 1);
 
     rb_define_method(cRect, "offset", img_rect_offset, -1);
     rb_define_method(cRect, "offset!", img_rect_offset_bang, -1);
@@ -82,6 +83,7 @@ VALUE img_rect_initialize(int argc, VALUE *argv, VALUE self) {
             rect->y = point->y;
             rect->width = size->width;
             rect->height = size->height;
+            break;
         }
         case 3: {
             if (FIXNUM_P(argv[0])) {
@@ -99,15 +101,18 @@ VALUE img_rect_initialize(int argc, VALUE *argv, VALUE self) {
                 rect->width = NUM2INT(argv[1]);
                 rect->height = NUM2INT(argv[2]);
             }
+            break;
         }
         case 4: {
             rect->x = NUM2INT(argv[0]);
             rect->y = NUM2INT(argv[1]);
             rect->width = NUM2INT(argv[2]);
             rect->height = NUM2INT(argv[3]);
+            break;
         }
         default:
             rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 0, 2, 3, 4)", argc);
+            break;
     }
     return Qnil;
 }
@@ -469,4 +474,8 @@ VALUE img_rect_dump(int argc, VALUE *argv, VALUE self) {
 
 VALUE img_rect_load(VALUE klass, VALUE binary) {
     RB_MARSHAL_LOAD(Rect);
+}
+
+VALUE img_rect_eql(VALUE self, VALUE other) {
+    RB_DATA_EQL(Rect);
 }

@@ -8,18 +8,35 @@ require 'benchmark'
 
 module OpenImage
 
+sze = Size.new(32, 32)
+pnt = Point.new(32, 32)
 
+rect = Rect.new(32, 32, 32, 32)
+p rect == sze
 
+exit
 
 
   # path = 'D:/Enterbrain/RGSS/Standard/Graphics/Characters/001-Fighter01.png'
   path = 'C:/Users/Eric/Desktop/test.jpg'
+  sub = Image.new(path)
+
   path = 'C:/Users/Eric/Downloads/DSCN1638.JPG'
   img = Image.new(path)
 
-  out = "C:/Users/Eric/Desktop/OUTPUT/emboss.png"
-  img.emboss.save_png out
 
+  img.blit(32, 32, sub).save_png "C:/Users/Eric/Desktop/OUTPUT/blit.png"
+
+
+  exit
+
+
+  out = "C:/Users/Eric/Desktop/OUTPUT/sobel0.png"
+  img.sobel_edge(0).save_png out
+  out = "C:/Users/Eric/Desktop/OUTPUT/sobel1.png"
+  img.sobel_edge(1).save_png out
+
+  exit
   # [0, 1, 2, 3].each_with_index do |i, ii|
 
   #   out = "C:/Users/Eric/Desktop/OUTPUT/line_detect#{ii}.png"

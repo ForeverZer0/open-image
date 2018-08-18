@@ -23,6 +23,7 @@ void Init_img_size(VALUE module) {
     rb_define_method(cSize, "to_s", img_size_to_s, 0);
     rb_define_alias(cSize, "to_str", "to_s");
     rb_define_method(cSize, "dup", img_size_dup, 0);
+    rb_define_method(cSize, "==", img_size_eql, 1);
 
     rb_define_method(cSize, "_dump", img_size_dump, -1);
     rb_define_method(cSize, "pack", img_size_dump, -1);
@@ -46,13 +47,16 @@ VALUE img_size_initialize(int argc, VALUE *argv, VALUE self) {
             Data_Get_Struct(argv[0], Point, point);
             size->width = point->x;
             size->height = point->y;
+            break;
         }
         case 2: {
             size->width = NUM2INT(argv[0]);
             size->height = NUM2INT(argv[1]);
+            break;
         }
         default:
             rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 0, 1, 2)", argc);
+            break;
     }
     return Qnil;
 }
@@ -120,4 +124,8 @@ VALUE img_size_dump(int argc, VALUE *argv, VALUE self) {
 
 VALUE img_size_load(VALUE klass, VALUE binary) {
     RB_MARSHAL_LOAD(Size);
+}
+
+VALUE img_size_eql(VALUE self, VALUE other) {
+    RB_DATA_EQL(Size);
 }

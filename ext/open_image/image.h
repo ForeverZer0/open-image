@@ -25,7 +25,7 @@ VALUE img_image_get_pixel(int argc, VALUE *argv, VALUE self);
 VALUE img_image_set_pixel(int argc, VALUE *argv, VALUE self);
 VALUE img_image_fill_rect(int argc, VALUE *argv, VALUE self);
 VALUE img_image_subimage(int argc, VALUE *argv, VALUE self);
-
+VALUE img_image_blit(int argc, VALUE *argv, VALUE self);
 VALUE img_image_split(VALUE self, VALUE rows, VALUE columns);
 
 VALUE img_image_size(VALUE self);
@@ -128,6 +128,8 @@ VALUE img_image_line_detect(VALUE self, VALUE direction);
 VALUE img_image_line_detect_bang(VALUE self, VALUE direction);
 static inline void img_image_line_detect_s(Image *image, VALUE direction);
 #endif
+
+
 
 #endif /* OPEN_IMAGE_CONVOLUTION_FILTER */
 #endif /* RB_OPEN_IMAGE_IMAGE_H */

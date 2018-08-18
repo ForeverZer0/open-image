@@ -57,6 +57,7 @@ void Init_img_color(VALUE module) {
 
     rb_define_alias(cColor, "to_str", "to_s");
     rb_define_alias(cColor, "to_int", "to_i");
+    rb_define_method(cColor, "==", img_color_eql, 1);
 
     rb_define_method(cColor, "hue", img_color_hue, 0);
     rb_define_method(cColor, "saturation", img_color_saturation, 0);
@@ -71,7 +72,6 @@ void Init_img_color(VALUE module) {
     rb_define_method(cColor, "pack", img_color_dump, -1);
     rb_define_singleton_method(cColor, "_load", img_color_load, 1);
     rb_define_singleton_method(cColor, "unpack", img_color_load, 1);
-
 }
 
 VALUE img_color_alloc(VALUE klass) {
@@ -475,4 +475,8 @@ VALUE img_color_dump(int argc, VALUE *argv, VALUE self) {
 
 VALUE img_color_load(VALUE klass, VALUE binary) {
     RB_MARSHAL_LOAD(Color);
+}
+
+VALUE img_color_eql(VALUE self, VALUE other) {
+    RB_DATA_EQL(Color);
 }

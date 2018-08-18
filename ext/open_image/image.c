@@ -54,6 +54,7 @@ void Init_img_image(VALUE module) {
     rb_define_method(cImage, "set_pixel", img_image_set_pixel, -1);
     rb_define_method(cImage, "fill_rect", img_image_fill_rect, -1);
     rb_define_method(cImage, "subimage", img_image_subimage, -1);
+    rb_define_method(cImage, "blit", img_image_blit, -1);
     rb_define_method(cImage, "split", img_image_split, 2);
 
 #if OPEN_IMAGE_GRAYSCALE
@@ -389,6 +390,47 @@ VALUE img_image_subimage(int argc, VALUE *argv, VALUE self) {
     sub->height = b - t;
     sub->pixels = dst;
     return Data_Wrap_Struct(CLASS_OF(self), NULL, img_image_free, sub);
+}
+
+VALUE img_image_blit(int argc, VALUE *argv, VALUE self) {
+    Image *other;
+    int x, y, w, h;
+    if (argc == 2) {
+        Point *pnt;
+        Data_Get_Struct(argv[0], Point, pnt);
+        x = pnt->x, y = pnt->y;
+        Data_Get_Struct(argv[2], Image, other);
+    } else if (argc == 3) {
+        x = NUM2INT(argv[0]);
+        y = NUM2INT(argv[1]);
+        Data_Get_Struct(argv[2], Image, other);
+    } else
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 2, 3)", argc);
+
+    IMAGE();
+
+    if (x < 0 || y < 0 || x >= image->width || y >= image->height)
+        rb_raise(eOpenImageError, "coordinates outside of image bounds (%d, %d)", x, y);
+
+    w = imin(other->width, image->width - other->width + x);
+    h = imin(other->height, image->height - other->height + y);
+
+    if (w < 1 || h < 1)
+        return self;
+
+    int sw = other->width;
+    int dw = image->width;
+
+    size_t row_size = w * COLOR_SIZE;
+    int src_offset, dst_offset;
+    unsigned char *dst = image->pixels;
+    unsigned char *src = other->pixels;
+    for (int y = 0; y < h; y++) { // Add here instead of calc
+        dst_offset = (x + (y * dw)) * COLOR_SIZE;
+        src_offset = y * sw * COLOR_SIZE;
+        memcpy(dst + dst_offset, src + src_offset, row_size);
+    }
+    return self;
 }
 
 VALUE img_image_split(VALUE self, VALUE rows, VALUE columns) {

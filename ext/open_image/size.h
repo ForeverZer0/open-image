@@ -17,6 +17,7 @@ VALUE img_size_to_a(VALUE self);
 VALUE img_size_to_h(VALUE self);
 VALUE img_size_to_s(VALUE self);
 VALUE img_size_dup(VALUE self);
+VALUE img_size_eql(VALUE self, VALUE other);
 
 VALUE img_size_dump(int argc, VALUE *argv, VALUE self);
 VALUE img_size_load(VALUE klass, VALUE binary);
