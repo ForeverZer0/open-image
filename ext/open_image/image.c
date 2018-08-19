@@ -3,10 +3,10 @@
 
 #define IMAGE()   \
     Image *image; \
-    Data_Get_Struct(self, Image, image);
+    Data_Get_Struct(self, Image, image)
 
 #define JPEG_QUALITY 90
-#define COLOR_SIZE 4 /* For possible future expandment */
+#define COLOR_SIZE 4
 
 #define RETURN_WRAP_IMAGE(klass, img) return Data_Wrap_Struct(klass, NULL, img_image_free, img)
 #define RETURN_DUP_IMAGE() return Data_Wrap_Struct(CLASS_OF(self), NULL, img_image_free, dup)
@@ -176,17 +176,16 @@ VALUE img_image_initialize(int argc, VALUE *argv, VALUE self) {
         Check_Type(arg1, T_STRING);
         const char *filename = StringValueCStr(arg1);
 
-        if (access(filename, F_OK | R_OK) == -1)
-        {
-            const char* error = access(filename, F_OK) == -1 ? "ENOENT" : "EACCES";
+        if (access(filename, F_OK | R_OK) == -1) {
+            const char *error = access(filename, F_OK) == -1 ? "ENOENT" : "EACCES";
             rb_raise(rb_const_get(rb_mErrno, rb_intern(error)), filename);
         }
-            
+
         if (flip)
             stbi_set_flip_vertically_on_load(TRUE);
 
         int n;
-        image->pixels = (unsigned char *) stbi_load(filename, &image->width, &image->height, &n, COLOR_SIZE);
+        image->pixels = (unsigned char *)stbi_load(filename, &image->width, &image->height, &n, COLOR_SIZE);
 
         if (flip)
             stbi_set_flip_vertically_on_load(FALSE);
@@ -433,7 +432,7 @@ VALUE img_image_blit(int argc, VALUE *argv, VALUE self) {
     int src_offset, dst_offset;
     unsigned char *dst = image->pixels;
     unsigned char *src = other->pixels;
-    for (int y = 0; y < h; y++) { // Add here instead of calc
+    for (int y = 0; y < h; y++) {  // Add here instead of calc
         dst_offset = (x + (y * dw)) * COLOR_SIZE;
         src_offset = y * sw * COLOR_SIZE;
         memcpy(dst + dst_offset, src + src_offset, row_size);
@@ -522,13 +521,13 @@ VALUE img_image_dup(VALUE self) {
 VALUE img_image_ptr(VALUE self) {
     IMAGE();
 #if USE_FIDDLE
-    VALUE args[2] = { LL2NUM((size_t)&image->pixels), UINT2NUM(image->width * image->height * 4) };
+    VALUE args[2] = {LL2NUM((size_t)&image->pixels), UINT2NUM(image->width * image->height * 4)};
     VALUE pointer = rb_obj_alloc(cFiddlePointer);
     rb_obj_call_init(pointer, 2, args);
     return pointer;
 #else
     return LL2NUM((size_t)&image->pixels);
-#endif
+#endif /* USE_FIDDLE */
 }
 
 #if OPEN_IMAGE_GRAYSCALE
