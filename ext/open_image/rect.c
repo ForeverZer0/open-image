@@ -42,6 +42,7 @@ void Init_img_rect(VALUE module) {
     rb_define_method(cRect, "to_h", img_rect_to_h, 0);
     rb_define_method(cRect, "to_s", img_rect_to_s, 0);
     rb_define_alias(cRect, "to_str", "to_s");
+    rb_define_alias(cRect, "to_ary", "to_a");
     rb_define_method(cRect, "dup", img_rect_dup, 0);
     rb_define_method(cRect, "==", img_rect_eql, 1);
 

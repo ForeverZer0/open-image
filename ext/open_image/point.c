@@ -23,6 +23,7 @@ void Init_img_point(VALUE module) {
     rb_define_method(cPoint, "offset", img_point_offset, -1);
     rb_define_method(cPoint, "offset!", img_point_offset_bang, -1);
 
+    rb_define_alias(cPoint, "to_ary", "to_a");
     rb_define_alias(cPoint, "to_str", "to_s");
 
     rb_define_method(cPoint, "_dump", img_point_dump, -1);

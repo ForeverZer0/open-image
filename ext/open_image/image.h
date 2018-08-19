@@ -10,6 +10,7 @@ VALUE img_image_alloc(VALUE klass);
 VALUE img_image_initialize(int argc, VALUE *argv, VALUE self);
 VALUE img_image_dispose(VALUE self);
 VALUE img_image_disposed_p(VALUE self);
+VALUE img_image_eql(VALUE self, VALUE other);
 
 VALUE img_image_width(VALUE self);
 VALUE img_image_height(VALUE self);

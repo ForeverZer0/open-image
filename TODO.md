@@ -2,10 +2,7 @@
 
 ## All
 
-* `==`
 * `coerce`
-* `_load(binary)`
-* `_dump(level = 0)`
 
 ___
 

@@ -22,6 +22,7 @@ void Init_img_size(VALUE module) {
     rb_define_method(cSize, "to_h", img_size_to_h, 0);
     rb_define_method(cSize, "to_s", img_size_to_s, 0);
     rb_define_alias(cSize, "to_str", "to_s");
+    rb_define_alias(cSize, "to_ary", "to_a");
     rb_define_method(cSize, "dup", img_size_dup, 0);
     rb_define_method(cSize, "==", img_size_eql, 1);
 

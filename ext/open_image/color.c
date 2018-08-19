@@ -55,6 +55,7 @@ void Init_img_color(VALUE module) {
     rb_define_method(cColor, "hsb", img_color_hsb, 0);
     rb_define_method(cColor, "html", img_color_html, 0);
 
+    rb_define_alias(cColor, "to_ary", "to_a");
     rb_define_alias(cColor, "to_str", "to_s");
     rb_define_alias(cColor, "to_int", "to_i");
     rb_define_method(cColor, "==", img_color_eql, 1);
@@ -118,8 +119,6 @@ VALUE img_color_initialize(int argc, VALUE *argv, VALUE self) {
         }
     }
 
-
-
     return Qnil;
 }
 
@@ -180,6 +179,7 @@ VALUE img_color_set_g(VALUE self, VALUE value) {
         color->g = (unsigned char)iclamp(NUM2INT(value), 0, 255);
     return value;
 }
+
 VALUE img_color_set_b(VALUE self, VALUE value) {
     COLOR();
     if (RB_FLOAT_TYPE_P(value))
@@ -439,7 +439,6 @@ static inline void img_color_hsb2rgb(Color *color, float hue, float saturation, 
                 g = brightness;
                 b = t;
                 break;
-
             case 3:
                 r = p;
                 g = q;

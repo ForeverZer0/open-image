@@ -38,6 +38,7 @@ void Init_img_image(VALUE module) {
     rb_define_alias(cImage, "columns", "width");
     rb_define_alias(cImage, "to_blob", "pixels");
     rb_define_method(cImage, "dup", img_image_dup, 0);
+    rb_define_method(cImage, "==", img_image_eql, 1);
     rb_define_method(cImage, "ptr", img_image_ptr, 0);
 
     rb_define_method(cImage, "size", img_image_size, 0);
@@ -174,11 +175,18 @@ VALUE img_image_initialize(int argc, VALUE *argv, VALUE self) {
     {
         Check_Type(arg1, T_STRING);
         const char *filename = StringValueCStr(arg1);
+
+        if (access(filename, F_OK | R_OK) == -1)
+        {
+            const char* error = access(filename, F_OK) == -1 ? "ENOENT" : "EACCES";
+            rb_raise(rb_const_get(rb_mErrno, rb_intern(error)), filename);
+        }
+            
         if (flip)
             stbi_set_flip_vertically_on_load(TRUE);
 
         int n;
-        image->pixels = (unsigned char *)stbi_load(filename, &image->width, &image->height, &n, COLOR_SIZE);
+        image->pixels = (unsigned char *) stbi_load(filename, &image->width, &image->height, &n, COLOR_SIZE);
 
         if (flip)
             stbi_set_flip_vertically_on_load(FALSE);
@@ -479,6 +487,10 @@ VALUE img_image_split(VALUE self, VALUE rows, VALUE columns) {
     return ary;
 }
 
+VALUE img_image_eql(VALUE self, VALUE other) {
+    return self == other ? Qtrue : Qfalse;
+}
+
 VALUE img_image_size(VALUE self) {
     IMAGE();
     Size *size = ALLOC(Size);
@@ -510,12 +522,9 @@ VALUE img_image_dup(VALUE self) {
 VALUE img_image_ptr(VALUE self) {
     IMAGE();
 #if USE_FIDDLE
-    VALUE *args = xmalloc(sizeof(VALUE) * 2);
-    args[0] = LL2NUM((size_t)&image->pixels);
-    args[1] = UINT2NUM(image->width * image->height * 4);
+    VALUE args[2] = { LL2NUM((size_t)&image->pixels), UINT2NUM(image->width * image->height * 4) };
     VALUE pointer = rb_obj_alloc(cFiddlePointer);
     rb_obj_call_init(pointer, 2, args);
-    xfree(args);
     return pointer;
 #else
     return LL2NUM((size_t)&image->pixels);
